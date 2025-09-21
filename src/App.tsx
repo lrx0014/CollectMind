@@ -5,18 +5,18 @@ import './App.css'
 type Availability = 'available' | 'downloadable' | 'unavailable' | string
 
 declare global {
-  interface Window {
-    Summarizer?: any
-  }
+  interface Window { Summarizer?: any }
   const Summarizer: any
 }
 
-function App() {
+export default function App() {
   const [supported, setSupported] = useState(false)
   const [availability, setAvailability] = useState<Availability>('unavailable')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [summary, setSummary] = useState<string>('')
+
+  const [compact, setCompact] = useState(false)
 
   useEffect(() => {
     const has = typeof window !== 'undefined' && 'Summarizer' in window
@@ -34,68 +34,44 @@ function App() {
   }, [])
 
   async function extractPageTextFromActiveTab(): Promise<string> {
-    const [tab] = await chrome.tabs.query({ active: true, currentWindow: true })
-    if (!tab?.id) throw new Error('No active tab')
-
-    const [{ result }] = await chrome.scripting.executeScript({
-      target: { tabId: tab.id },
-      func: () => {
-        try {
-          const sel = window.getSelection?.()?.toString?.().trim()
-          const baseText =
-            sel && sel.length > 80
-              ? sel
-              : document.body?.innerText || document.documentElement?.innerText || ''
-
-          const cleaned = baseText
-            .split('\n')
-            .map((l) => l.trim())
-            .filter((l) => l.length > 0 && l.length < 2000)
-            .join('\n')
-
-          return cleaned.slice(0, 8000)
-        } catch (e) {
-          return ''
-        }
-      }
-    } as any)
-
-    const text = (result as string) || ''
-    if (!text || text.trim().length < 50) {
-      throw new Error('No sufficient content extracted from active tab')
+    if (location.protocol !== 'chrome-extension:') {
+      throw new Error('environment error')
     }
-    return text
+    const resp = await chrome.runtime.sendMessage({ type: 'collectmind:extract' })
+    if (!resp?.ok) throw new Error(resp?.error || 'unable to extract text from active tab')
+    if (!resp.text || resp.text.trim().length < 50) {
+      throw new Error('no sufficient text to extract from active tab')
+    }
+    return resp.text as string
   }
 
   async function handleSummarize() {
     setError(null)
-    setSummary('')
     setLoading(true)
+
+    if (!compact) setCompact(true)
+
     try {
-      if (!supported) throw new Error('Required APIs are not supported on this browser')
+      if (!supported) throw new Error('Required APIs are not supported on this device')
       if (availability === 'unavailable') {
-        throw new Error('Required APIs are not supported on this browser')
+        throw new Error('Required APIs are not supported on this device')
       }
 
       const text = await extractPageTextFromActiveTab()
-
       const summarizer = await Summarizer.create({
         type: 'tldr',
         length: 'long',
         format: 'plain-text'
       })
-
       const raw: string = await summarizer.summarize(text)
-
-      const threeSentences = raw
+      const three = raw
         .replace(/\s+/g, ' ')
         .split(/(?<=[。！？.!?])/)
-        .map((s) => s.trim())
-        .filter((s) => s.length > 0)
+        .map(s => s.trim())
+        .filter(Boolean)
         .slice(0, 3)
         .join(' ')
-
-      setSummary(threeSentences || raw)
+      setSummary(three || raw)
     } catch (e: any) {
       setError(e?.message || 'failed to summarize')
     } finally {
@@ -104,38 +80,39 @@ function App() {
   }
 
   const availabilityTip = useMemo(() => {
-    if (!supported) return 'Required APIs are not supported on this browser'
-    if (availability === 'downloadable') return 'model is downloadable'
+    if (!supported) return 'Required APIs are not supported on this device'
+    if (availability === 'downloadable') return 'model is downloadable, it will be downloaded automatically'
     if (availability === 'available') return 'model is available'
     return 'model is unavailable'
   }, [supported, availability])
 
   return (
-    <>
-      <div>
-        <a href="https://github.com/lrx0014/CollectMind" target="_blank">
-          <img src={collectMindLogo} className="logo" alt="CollectMind logo" />
-        </a>
-      </div>
-      <h1>CollectMind</h1>
-
-      <div className="summary-toolbar">
-        <button onClick={handleSummarize} disabled={loading}>
-          {loading ? 'Summarizing…' : 'Summarize'}
-        </button>
-        <br></br>
-        <span className="availability">{availabilityTip}</span>
-      </div>
-
-      {error && <p className="error">{error}</p>}
-      {summary && (
-        <div className="summary-box">
-          <h3>TL;DR</h3>
-          <p>{summary}</p>
+    <div className={`cm-shell ${compact ? 'is-compact' : ''}`}>
+      {/* head container */}
+      <div className="cm-hero">
+        <div className="cm-brand">
+          <img src={collectMindLogo} className="cm-logo" alt="CollectMind logo" />
+          <h1 className="cm-title">CollectMind</h1>
         </div>
-      )}
-    </>
+
+        <div className="cm-actions">
+          <button className="cm-btn" onClick={handleSummarize} disabled={loading}>
+            {loading ? 'Summarizing…' : 'Summarize'}
+          </button>
+        </div>
+        <span className="cm-tip" title={availabilityTip}>{availabilityTip}</span>
+      </div>
+
+      {/* Content */}
+      <div className="cm-content">
+        {error && <p className="cm-error">{error}</p>}
+        {summary && (
+          <div className="cm-summary">
+            <h3>TL;DR</h3>
+            <p>{summary}</p>
+          </div>
+        )}
+      </div>
+    </div>
   )
 }
-
-export default App

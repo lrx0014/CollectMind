@@ -40,3 +40,138 @@
 .read-the-docs {
   color: #888;
 }
+
+.cm-shell {
+  position: relative;
+  min-height: 100vh;
+  padding: 0 12px;
+  box-sizing: border-box;
+  font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, 'Apple Color Emoji', 'Segoe UI Emoji';
+}
+
+.cm-hero {
+  position: absolute;
+  left: 50%;
+  top: 42%;
+  transform: translate(-50%, -50%) scale(1);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  transition:
+    top 320ms ease,
+    left 320ms ease,
+    transform 320ms ease,
+    padding 320ms ease,
+    background-color 240ms ease,
+    border-color 240ms ease;
+  padding: 0;
+  width: calc(100% - 24px);
+  max-width: 520px;
+}
+
+.cm-shell.is-compact .cm-hero {
+  position: sticky;
+  top: 0;
+  left: 0;
+  transform: none; 
+  width: 100%;
+  max-width: 100%;
+  padding: 8px 8px;
+  box-sizing: border-box;
+  border-bottom: 1px solid rgba(0,0,0,0.08);
+  backdrop-filter: blur(6px);
+  background-color: color-mix(in oklab, canvas 92%, transparent);
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+}
+
+/* 品牌：logo + 名称 */
+.cm-brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.cm-logo {
+  width: 96px;
+  height: 96px;
+  border-radius: 18px;
+  transition: width 320ms ease, height 320ms ease, border-radius 320ms ease;
+}
+
+.cm-title {
+  margin: 0;
+  font-size: 32px;
+  line-height: 1.1;
+  transition: font-size 320ms ease, opacity 220ms ease;
+}
+
+.cm-shell.is-compact .cm-logo {
+  width: 22px;
+  height: 22px;
+  border-radius: 6px;
+}
+
+.cm-shell.is-compact .cm-title {
+  font-size: 16px;
+}
+
+.cm-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.cm-btn {
+  padding: 6px 12px;
+  border-radius: 10px;
+  border: 1px solid color-mix(in oklab, canvastext 12%, transparent);
+  background: color-mix(in oklab, canvas 0%, canvastext 2%);
+  cursor: pointer;
+  font-size: 14px;
+  line-height: 1;
+  transition: transform 120ms ease, background-color 160ms ease, border-color 160ms ease, opacity 160ms ease;
+}
+
+.cm-btn:hover:not(:disabled) {
+  transform: translateY(-1px);
+}
+
+.cm-btn:active:not(:disabled) {
+  transform: translateY(0);
+}
+
+.cm-btn:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+
+.cm-tip {
+  font-size: 12px;
+  opacity: 0.75;
+}
+
+.cm-content {
+  padding-top: max(56vh, 140px); 
+  transition: padding-top 320ms ease;
+}
+
+.cm-shell.is-compact .cm-content {
+  padding-top: 8px;
+}
+
+.cm-summary {
+  margin-top: 10px;
+  padding: 12px;
+  border-radius: 12px;
+  background: color-mix(in oklab, canvastext 5%, transparent);
+  line-height: 1.55;
+}
+
+.cm-error {
+  color: #b00020;
+  margin-top: 10px;
+}
