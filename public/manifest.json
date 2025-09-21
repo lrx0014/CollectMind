@@ -1,0 +1,26 @@
+{
+  "manifest_version": 3,
+  "name": "CollectMind",
+  "version": "0.1.0",
+  "description": "A side panel to collect and organize your thoughts on the web.",
+  "icons": {
+    "16": "images/icon16.png",
+    "32": "images/icon32.png",
+    "48": "images/icon48.png",
+    "128": "images/icon128.png"
+  },
+
+  "permissions": ["sidePanel"],
+  "action": {
+    "default_title": "CollectMind"
+  },
+
+  "background": {
+    "service_worker": "background.js",
+    "type": "module"
+  },
+
+  "side_panel": {
+    "default_path": "index.html"
+  }
+}
