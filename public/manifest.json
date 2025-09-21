@@ -10,7 +10,8 @@
     "128": "images/icon128.png"
   },
 
-  "permissions": ["sidePanel"],
+  "permissions": ["sidePanel", "tabs", "scripting"],
+  "host_permissions": ["<all_urls>"],
   "action": {
     "default_title": "CollectMind"
   },
