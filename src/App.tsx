@@ -1,81 +1,65 @@
-import React from 'react';
+import React, {useState} from 'react';
 import HeaderComponent from "./components/header.tsx";
 import "./styles/app.css";
 import TopicCard from "./components/card.tsx";
+import CreateTopicModal from "./components/create_topic_model.tsx";
 
 
-// --- Mock Data for Cards ---
-const topics = [
+// --- Initial Mock Data ---
+const initialTopics = [
     {
-        title: 'Mock Topic 1',
+        title: 'Component Library Migration Plan',
         summary: 'This document outlines the strategy and timeline for migrating our legacy component library to the new design system. Key milestones and potential risks are detailed within.',
-        tagColor: '#4A90E2'
+        tagColor: '#4A90E2' // Blue
     },
     {
-        title: 'Mock Topic 2',
+        title: 'Q4 2025 Engineering Goals & OKRs',
         summary: 'A comprehensive list of objectives and key results for the engineering department for the fourth quarter. Focus areas include performance improvements and security enhancements.',
-        tagColor: '#50E3C2'
-    },
-    {
-        title: 'Mock Topic 3',
-        summary: 'Findings from the recent security audit of the user authentication and session management flows. This is a very long summary to test the line clamp functionality to ensure that it correctly truncates text that exceeds three lines, providing a clean and consistent look across all cards.',
-        tagColor: '#F5A623'
-    },
-    {
-        title: 'Mock Topic 4',
-        summary: 'Analysis of recent API traffic spikes and a proposal for implementing a more robust rate-limiting strategy to ensure service stability.',
-        tagColor: '#D0021B'
-    },
-    {
-        title: 'Mock Topic 5',
-        summary: 'Initial mockups and user flow diagrams for the redesigned user onboarding experience. Feedback is requested from all stakeholders.',
-        tagColor: '#bd93f9' // Purple
-    },
-    {
-        title: 'Mock Topic 6',
-        summary: 'This document outlines the strategy and timeline for migrating our legacy component library to the new design system. Key milestones and potential risks are detailed within.',
-        tagColor: '#4A90E2'
-    },
-    {
-        title: 'Mock Topic 7',
-        summary: 'A comprehensive list of objectives and key results for the engineering department for the fourth quarter. Focus areas include performance improvements and security enhancements.',
-        tagColor: '#50E3C2'
-    },
-    {
-        title: 'Mock Topic 8',
-        summary: 'Findings from the recent security audit of the user authentication and session management flows. This is a very long summary to test the line clamp functionality to ensure that it correctly truncates text that exceeds three lines, providing a clean and consistent look across all cards.',
-        tagColor: '#F5A623'
-    },
-    {
-        title: 'Mock Topic 9',
-        summary: 'Analysis of recent API traffic spikes and a proposal for implementing a more robust rate-limiting strategy to ensure service stability.',
-        tagColor: '#D0021B'
-    },
-    {
-        title: 'Mock Topic 10',
-        summary: 'Initial mockups and user flow diagrams for the redesigned user onboarding experience. Feedback is requested from all stakeholders.',
-        tagColor: '#bd93f9' // Purple
+        tagColor: '#50E3C2' // Green
     },
 ];
 
 // --- Main App Component ---
-const App: React.FC = () => (
-    <>
-        <div className="app-container">
-            <HeaderComponent />
-            <div className="content-area">
-                {topics.map((topic, index) => (
-                    <TopicCard
-                        key={index}
-                        title={topic.title}
-                        summary={topic.summary}
-                        tagColor={topic.tagColor}
-                    />
-                ))}
+const App: React.FC = () => {
+    const [isModalOpen, setIsModalOpen] = useState(false);
+    // 将 topic 列表变成一个 state，以便我们可以添加新项
+    const [topics, setTopics] = useState(initialTopics);
+
+    const openModal = () => setIsModalOpen(true);
+    const closeModal = () => setIsModalOpen(false);
+
+    const handleCreateTopic = (name: string, color: string) => {
+        const newTopic = {
+            title: name,
+            summary: 'Newly created topic. You can add a summary here.',
+            tagColor: color,
+        };
+        // 将新创建的 topic 添加到列表的开头
+        setTopics([newTopic, ...topics]);
+    };
+
+    return (
+        <>
+            <div className={`app-container ${isModalOpen ? 'modal-open' : ''}`}>
+
+                <HeaderComponent onNewTopicClick={openModal} />
+
+                <div className="content-area">
+                    {topics.map((topic, index) => (
+                        <TopicCard
+                            key={index}
+                            title={topic.title}
+                            summary={topic.summary}
+                            tagColor={topic.tagColor}
+                        />
+                    ))}
+                </div>
             </div>
-        </div>
-    </>
-);
+
+            {isModalOpen && <CreateTopicModal onClose={closeModal} onCreate={handleCreateTopic} />}
+        </>
+    );
+};
 
 export default App;
 
