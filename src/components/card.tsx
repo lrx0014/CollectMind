@@ -1,25 +1,23 @@
 // --- TopicCard Component Definition ---
 import React from "react";
 import "../styles/topic_card.css";
+import type {Topic} from "../libs/global.ts";
 
 // --- TopicCard Prop Types ---
 interface TopicCardProps {
-    title: string;
-    summary: string;
-    tagColor: string;
+    topic: Topic;
+    onClick: () => void;
 }
 
-const TopicCard: React.FC<TopicCardProps> = ({ title, summary, tagColor }) => {
+const TopicCard: React.FC<TopicCardProps> = ({ topic, onClick }) => {
     return (
-        <>
-            <div className="topic-card-new">
-                <div className="color-tag" style={{ backgroundColor: tagColor }}></div>
-                <div className="card-content">
-                    <p className="card-title-new">{title}</p>
-                    <p className="card-summary">{summary}</p>
-                </div>
+        <div className="topic-card-new" onClick={onClick}>
+            <div className="color-tag" style={{ backgroundColor: topic.color_tag_rgb }}></div>
+            <div className="card-content">
+                <h3 className="card-title-new">{topic.name}</h3>
+                <p className="card-summary">{topic.summary}</p>
             </div>
-        </>
+        </div>
     );
 };
 

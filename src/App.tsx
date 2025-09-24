@@ -5,7 +5,8 @@ import TopicCard from "./components/card.tsx";
 import CreateTopicModal from "./components/create_topic_model.tsx";
 import {useLiveQuery} from "dexie-react-hooks";
 import db from "./libs/db.ts";
-import {colorOptions} from "./libs/global.ts";
+import {colorOptions, type Topic} from "./libs/global.ts";
+import Header2 from "./components/header2.tsx";
 
 // --- Main App Component ---
 const App: React.FC = () => {
@@ -17,6 +18,9 @@ const App: React.FC = () => {
         () => db.table('topics').where('is_deleted').notEqual(1).reverse().sortBy('create_time'),
         [] // 依赖项数组，为空表示只在组件挂载时运行一次
     );
+
+    const [currentView, setCurrentView] = useState<'list' | 'detail'>('list');
+    const [selectedTopic, setSelectedTopic] = useState<Topic | null>(null);
 
     const openModal = () => setIsModalOpen(true);
     const closeModal = () => setIsModalOpen(false);
@@ -41,21 +45,40 @@ const App: React.FC = () => {
         }
     };
 
+    const handleCardClick = (topic: Topic) => {
+        setSelectedTopic(topic);
+        setCurrentView('detail');
+    };
+
+    const handleBackToList = () => {
+        setSelectedTopic(null);
+        setCurrentView('list');
+    };
+
     return (
         <>
             <div className={`app-container ${isModalOpen ? 'modal-open' : ''}`}>
 
-                <HeaderComponent onNewTopicClick={openModal} />
+                {currentView === 'list' && <HeaderComponent onNewTopicClick={openModal} />}
+                {currentView === 'detail' && selectedTopic && (
+                    <Header2 topicName={selectedTopic.name} onBack={handleBackToList} />
+                )}
 
                 <div className="content-area">
-                    {topics?.map((topic: any) => (
-                        <TopicCard
-                            key={topic.id}
-                            title={topic.name}
-                            summary={topic.summary}
-                            tagColor={topic.color_tag_rgb}
-                        />
-                    ))}
+                    {currentView === 'list' ? (
+                        topics?.map((topic) => (
+                            <TopicCard
+                                key={topic.id}
+                                topic={topic}
+                                onClick={() => handleCardClick(topic)}
+                            />
+                        ))
+                    ) : (
+                        <div>
+                            <h2>Details for {selectedTopic?.name}</h2>
+                            <p>Content for the selected topic will go here.</p>
+                        </div>
+                    )}
                 </div>
             </div>
 
