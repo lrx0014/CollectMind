@@ -2,15 +2,7 @@ import React, {useState} from "react";
 import { X } from 'lucide-react';
 
 import "../styles/create_topic_model.css";
-
-const colorOptions = [
-    { name: 'Blue', value: '#4A90E2' },
-    { name: 'Green', value: '#50E3C2' },
-    { name: 'Orange', value: '#F5A623' },
-    { name: 'Red', value: '#D0021B' },
-    { name: 'Purple', value: '#9013FE' },
-    { name: 'Teal', value: '#008080' },
-];
+import {colorOptions} from "../libs/global.ts";
 
 interface CreateTopicModalProps {
     onClose: () => void;
