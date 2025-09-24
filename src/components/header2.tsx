@@ -1,5 +1,5 @@
 import React from "react";
-import {ChevronLeft, Plus, RotateCw, Search, Settings} from "lucide-react";
+import {ChevronLeft, Plus, Search, Settings} from "lucide-react";
 import "../styles/header2.css";
 
 interface Toolbar2Props {
@@ -18,12 +18,12 @@ const Header2: React.FC<Toolbar2Props> = ({onBack }) => {
 
                 <button className="add-page-button">
                     <Plus size={20} />
-                    <span>Add current page</span>
+                    <span>Add Page</span>
                 </button>
 
                 <div className="icon-group">
                     <Search size={22} className="icon" />
-                    <RotateCw size={22} className="icon" />
+                    {/*<RotateCw size={22} className="icon" />*/}
                     <Settings size={22} className="icon" />
                 </div>
             </div>

@@ -1,4 +1,4 @@
-import { Search, RotateCw, Settings } from 'lucide-react';
+import { Search, Settings } from 'lucide-react';
 import '../styles/header.css'
 import React from "react";
 
@@ -17,7 +17,7 @@ const HeaderComponent: React.FC<HeaderComponentProps> = ({onNewTopicClick}) => (
             </div>
             <div className="icon-group">
                 <Search size={22} className="icon" />
-                <RotateCw size={22} className="icon" />
+                {/*<RotateCw size={22} className="icon" />*/}
                 <Settings size={22} className="icon" />
             </div>
         </div>
