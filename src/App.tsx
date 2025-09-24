@@ -1,161 +1,81 @@
-import { useEffect, useRef, useState } from 'react'
-import collectMindLogo from '/images/icon_origin.png'
-import './App.css'
+import React from 'react';
+import HeaderComponent from "./components/header.tsx";
+import "./styles/app.css";
+import TopicCard from "./components/card.tsx";
 
-type Availability = 'available' | 'downloadable' | 'unavailable' | string
 
-declare global {
-  interface Window {
-    Summarizer?: any
-  }
-  const Summarizer: any
-}
+// --- Mock Data for Cards ---
+const topics = [
+    {
+        title: 'Mock Topic 1',
+        summary: 'This document outlines the strategy and timeline for migrating our legacy component library to the new design system. Key milestones and potential risks are detailed within.',
+        tagColor: '#4A90E2'
+    },
+    {
+        title: 'Mock Topic 2',
+        summary: 'A comprehensive list of objectives and key results for the engineering department for the fourth quarter. Focus areas include performance improvements and security enhancements.',
+        tagColor: '#50E3C2'
+    },
+    {
+        title: 'Mock Topic 3',
+        summary: 'Findings from the recent security audit of the user authentication and session management flows. This is a very long summary to test the line clamp functionality to ensure that it correctly truncates text that exceeds three lines, providing a clean and consistent look across all cards.',
+        tagColor: '#F5A623'
+    },
+    {
+        title: 'Mock Topic 4',
+        summary: 'Analysis of recent API traffic spikes and a proposal for implementing a more robust rate-limiting strategy to ensure service stability.',
+        tagColor: '#D0021B'
+    },
+    {
+        title: 'Mock Topic 5',
+        summary: 'Initial mockups and user flow diagrams for the redesigned user onboarding experience. Feedback is requested from all stakeholders.',
+        tagColor: '#bd93f9' // Purple
+    },
+    {
+        title: 'Mock Topic 6',
+        summary: 'This document outlines the strategy and timeline for migrating our legacy component library to the new design system. Key milestones and potential risks are detailed within.',
+        tagColor: '#4A90E2'
+    },
+    {
+        title: 'Mock Topic 7',
+        summary: 'A comprehensive list of objectives and key results for the engineering department for the fourth quarter. Focus areas include performance improvements and security enhancements.',
+        tagColor: '#50E3C2'
+    },
+    {
+        title: 'Mock Topic 8',
+        summary: 'Findings from the recent security audit of the user authentication and session management flows. This is a very long summary to test the line clamp functionality to ensure that it correctly truncates text that exceeds three lines, providing a clean and consistent look across all cards.',
+        tagColor: '#F5A623'
+    },
+    {
+        title: 'Mock Topic 9',
+        summary: 'Analysis of recent API traffic spikes and a proposal for implementing a more robust rate-limiting strategy to ensure service stability.',
+        tagColor: '#D0021B'
+    },
+    {
+        title: 'Mock Topic 10',
+        summary: 'Initial mockups and user flow diagrams for the redesigned user onboarding experience. Feedback is requested from all stakeholders.',
+        tagColor: '#bd93f9' // Purple
+    },
+];
 
-export default function App() {
-  const [supported, setSupported] = useState(false)
-  const [availability, setAvailability] = useState<Availability>('unavailable')
-  const [loading, setLoading] = useState(false)
-  const [error, setError] = useState<string | null>(null)
-
-  const [compact, setCompact] = useState(false)
-  const [summary, setSummary] = useState('')
-  const [summaryPending, setSummaryPending] = useState('')
-
-  const heroRef = useRef<HTMLDivElement | null>(null)
-
-  useEffect(() => {
-    const has = typeof window !== 'undefined' && 'Summarizer' in window
-    setSupported(has)
-    if (has) {
-      ;(async () => {
-        try {
-          const av = await Summarizer.availability()
-          setAvailability(av)
-        } catch {
-          setAvailability('unavailable')
-        }
-      })()
-    }
-  }, [])
-
-  useEffect(() => {
-    const el = heroRef.current
-    if (!el) return
-    const onEnd = () => {
-      if (compact && summaryPending) {
-        setSummary(summaryPending)
-        setSummaryPending('')
-      }
-    }
-    el.addEventListener('transitionend', onEnd)
-    return () => el.removeEventListener('transitionend', onEnd)
-  }, [compact, summaryPending])
-
-  async function extractPageTextFromActiveTab(): Promise<string> {
-    const [tab] = await chrome.tabs.query({ active: true, currentWindow: true })
-    if (!tab?.id) throw new Error('No active tab')
-
-    const [{ result }] = await chrome.scripting.executeScript({
-      target: { tabId: tab.id },
-      func: () => {
-        try {
-          const sel = window.getSelection?.()?.toString?.().trim()
-          const baseText =
-            sel && sel.length > 80
-              ? sel
-              : document.body?.innerText || document.documentElement?.innerText || ''
-
-          const cleaned = baseText
-            .split('\n')
-            .map((l) => l.trim())
-            .filter((l) => l.length > 0 && l.length < 2000)
-            .join('\n')
-
-          return cleaned.slice(0, 8000)
-        } catch {
-          return ''
-        }
-      }
-    } as any)
-
-    const text = (result as string) || ''
-    if (!text || text.trim().length < 50) {
-      throw new Error('No sufficient content extracted from active tab')
-    }
-    return text
-  }
-
-  async function handleSummarize() {
-    setError(null)
-    setLoading(true)
-    try {
-      if (!supported) throw new Error('Required APIs are not supported on this browser')
-      if (availability === 'unavailable') {
-        throw new Error('Required APIs are not supported on this browser')
-      }
-
-      const text = await extractPageTextFromActiveTab()
-
-      const summarizer = await Summarizer.create({
-        type: 'tldr',
-        length: 'long',
-        format: 'plain-text'
-      })
-
-      const raw: string = await summarizer.summarize(text)
-
-      const threeSentences = raw
-        .replace(/\s+/g, ' ')
-        .split(/(?<=[。！？.!?])/)
-        .map((s) => s.trim())
-        .filter((s) => s.length > 0)
-        .slice(0, 3)
-        .join(' ')
-
-      setSummaryPending(threeSentences || raw)
-
-      if (!compact) setCompact(true)
-    } catch (e: any) {
-      setError(e?.message || 'failed to summarize')
-    } finally {
-      setLoading(false)
-    }
-  }
-
-  // const availabilityTip = useMemo(() => {
-  //   if (!supported) return 'Required APIs are not supported on this browser'
-  //   if (availability === 'downloadable') return 'model is downloadable'
-  //   if (availability === 'available') return 'model is available'
-  //   return 'model is unavailable'
-  // }, [supported, availability])
-
-  return (
-    <div className={`cm-shell ${compact ? 'is-compact' : ''}`}>
-      {/* head */}
-      <div ref={heroRef} className="cm-hero">
-        <div className="cm-brand">
-          <img src={collectMindLogo} className="cm-logo" alt="CollectMind logo" />
-          <h1 className="cm-title">CollectMind</h1>
+// --- Main App Component ---
+const App: React.FC = () => (
+    <>
+        <div className="app-container">
+            <HeaderComponent />
+            <div className="content-area">
+                {topics.map((topic, index) => (
+                    <TopicCard
+                        key={index}
+                        title={topic.title}
+                        summary={topic.summary}
+                        tagColor={topic.tagColor}
+                    />
+                ))}
+            </div>
         </div>
+    </>
+);
 
-        <div className="cm-actions">
-          <button className="cm-btn" onClick={handleSummarize} disabled={loading}>
-            {loading ? 'Summarizing…' : 'Summarize'}
-          </button>
-          {/* <span className="cm-tip">{availabilityTip}</span> */}
-        </div>
-      </div>
+export default App;
 
-      {/* content container */}
-      <div className="cm-content">
-        {error && <p className="cm-error">{error}</p>}
-        {summary && (
-          <div className="cm-summary">
-            <h3>TL;DR</h3>
-            <p>{summary}</p>
-          </div>
-        )}
-      </div>
-    </div>
-  )
-}
