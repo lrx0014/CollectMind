@@ -2,7 +2,6 @@ import React, {useState} from 'react';
 import HeaderComponent from "./components/header.tsx";
 import "./styles/app.css";
 import TopicCard from "./components/topic_card.tsx";
-import CreateTopicModal from "./components/create_topic_model.tsx";
 import {useLiveQuery} from "dexie-react-hooks";
 import db, {type Topic} from "./libs/db.ts";
 import {colorOptions} from "./libs/global.ts";
@@ -10,16 +9,17 @@ import Header2 from "./components/header2.tsx";
 import SavedPageCard from "./components/saved_page.tsx";
 import {showToast} from "./components/toast.tsx";
 import ConfirmationModal from "./components/confirmation.tsx";
+import CreateOrUpdateTopicModal from "./components/create_or_update_topic_modal.tsx";
 
 // --- Main App Component ---
 const App: React.FC = () => {
 
-    const [isModalOpen, setIsModalOpen] = useState(false);
+    const [createModalOpen, setCreateModalOpen] = useState(false);
     const [currentView, setCurrentView] = useState<'list' | 'detail'>('list');
     const [selectedTopic, setSelectedTopic] = useState<Topic | null>(null);
 
-    const openModal = () => setIsModalOpen(true);
-    const closeModal = () => setIsModalOpen(false);
+    const openModal = () => setCreateModalOpen(true);
+    const closeModal = () => setCreateModalOpen(false);
 
     const [confirmOpen, setConfirmOpen] = useState(false);
     const [confirmTitle, setConfirmTitle] = useState("");
@@ -38,6 +38,19 @@ const App: React.FC = () => {
     };
 
     const closeConfirm = () => setConfirmOpen(false);
+
+    const [editModalOpen, setEditModalOpen] = useState(false);
+    const [editingTopic, setEditingTopic] = useState<Topic | null>(null);
+
+    const openEditTopic = (topic: Topic) => {
+        setEditingTopic(topic);
+        setEditModalOpen(true);
+    };
+
+    const closeEditTopic = () => {
+        setEditingTopic(null);
+        setEditModalOpen(false);
+    };
 
     const topics = useLiveQuery(
         () => db.getAllTopics(),
@@ -162,7 +175,7 @@ const App: React.FC = () => {
 
     return (
         <>
-            <div className={`app-container ${isModalOpen ? 'modal-open' : ''}`}>
+            <div className={`app-container ${createModalOpen ? 'modal-open' : ''}`}>
 
                 {currentView === 'list' && <HeaderComponent onNewTopicClick={openModal} />}
                 {currentView === 'detail' && selectedTopic && (
@@ -180,6 +193,7 @@ const App: React.FC = () => {
                                     e?.stopPropagation?.();
                                     handleDeleteTopic(topic);
                                 }}
+                                onEdit={() => openEditTopic(topic)}
                             />
                         ))
                     ) : (
@@ -195,7 +209,31 @@ const App: React.FC = () => {
                 </div>
             </div>
 
-            {isModalOpen && <CreateTopicModal onClose={closeModal} onCreate={handleCreateTopic} />}
+            {createModalOpen && <CreateOrUpdateTopicModal mode="create" onClose={closeModal} onCreate={handleCreateTopic} />}
+
+            {editModalOpen && editingTopic && (
+                <CreateOrUpdateTopicModal
+                    mode="edit"
+                    initialName={editingTopic.name}
+                    initialColor={editingTopic.color_tag_rgb}
+                    onClose={closeEditTopic}
+                    onUpdate={async (name, color) => {
+                        try {
+                            await db.topics.update(editingTopic.id, {
+                                name,
+                                color_tag: colorOptions.find(c => c.value === color)?.name ?? "Unknown",
+                                color_tag_rgb: color,
+                                update_time: Date.now(),
+                            });
+                            showToast("Topic updated.");
+                        } catch (err) {
+                            console.error(err);
+                            showToast("Failed to update topic.");
+                        }
+                    }}
+                />
+            )}
+
             <ConfirmationModal
                 open={confirmOpen}
                 title={confirmTitle}

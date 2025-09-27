@@ -6,12 +6,13 @@ import {Pencil, Trash2} from "lucide-react";
 
 // --- TopicCard Prop Types ---
 interface TopicCardProps {
-    topic: Topic,
-    onClick: () => void,
-    onDelete: () => void
+    topic: Topic;
+    onClick: () => void;
+    onDelete: () => void;
+    onEdit: () => void;
 }
 
-const TopicCard: React.FC<TopicCardProps> = ({topic, onClick, onDelete}) => {
+const TopicCard: React.FC<TopicCardProps> = ({topic, onClick, onDelete, onEdit}) => {
     return (
         <div className="topic-card-new" onClick={onClick}>
             <div className="color-tag" style={{backgroundColor: topic.color_tag_rgb}}></div>
@@ -22,6 +23,7 @@ const TopicCard: React.FC<TopicCardProps> = ({topic, onClick, onDelete}) => {
             <div className="card-actions">
                 <button className="action-button" onClick={(e) => {
                     e.stopPropagation(); /* Edit */
+                    onEdit();
                 }}>
                     <Pencil size={16}/>
                 </button>
