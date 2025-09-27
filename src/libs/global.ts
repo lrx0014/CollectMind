@@ -6,10 +6,3 @@ export const colorOptions = [
     { name: 'Purple', value: '#9013FE' },
     { name: 'Teal', value: '#008080' },
 ];
-
-export interface Topic {
-    id: number;
-    name: string;
-    summary: string;
-    color_tag_rgb: string;
-}

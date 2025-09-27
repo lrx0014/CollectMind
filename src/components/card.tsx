@@ -1,7 +1,7 @@
 // --- TopicCard Component Definition ---
 import React from "react";
 import "../styles/topic_card.css";
-import type {Topic} from "../libs/global.ts";
+import type {Topic} from "../libs/db.ts";
 
 // --- TopicCard Prop Types ---
 interface TopicCardProps {

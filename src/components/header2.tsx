@@ -5,9 +5,10 @@ import "../styles/header2.css";
 interface Toolbar2Props {
     topicName: string;
     onBack: () => void;
+    onAddPage: () => void;
 }
 
-const Header2: React.FC<Toolbar2Props> = ({onBack }) => {
+const Header2: React.FC<Toolbar2Props> = ({onBack, onAddPage}) => {
     return (
         <>
             <div className="toolbar2-container">
@@ -16,7 +17,7 @@ const Header2: React.FC<Toolbar2Props> = ({onBack }) => {
                     <span>Back</span>
                 </div>
 
-                <button className="add-page-button">
+                <button className="add-page-button" onClick={onAddPage}>
                     <Plus size={20} />
                     <span>Add Page</span>
                 </button>
