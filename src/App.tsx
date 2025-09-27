@@ -1,7 +1,7 @@
 import React, {useState} from 'react';
 import HeaderComponent from "./components/header.tsx";
 import "./styles/app.css";
-import TopicCard from "./components/card.tsx";
+import TopicCard from "./components/topic_card.tsx";
 import CreateTopicModal from "./components/create_topic_model.tsx";
 import {useLiveQuery} from "dexie-react-hooks";
 import db, {type Topic} from "./libs/db.ts";
@@ -116,12 +116,11 @@ const App: React.FC = () => {
                             <TopicCard
                                 key={topic.id}
                                 topic={topic}
-                                onClick={() => handleCardClick(topic)}
-                            />
+                                onClick={() => handleCardClick(topic)} onDelete={()=> console.log("delete topic")}/>
                         ))
                     ) : (
                         savedPages?.map(page => (
-                                <SavedPageCard key={page.id} page={page} />
+                                <SavedPageCard key={page.id} page={page} onDelete={()=>console.log("delete page")}/>
                             ))
                     )}
                 </div>
