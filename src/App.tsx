@@ -3,7 +3,7 @@ import HeaderComponent from "./components/header.tsx";
 import "./styles/app.css";
 import TopicCard from "./components/topic_card.tsx";
 import {useLiveQuery} from "dexie-react-hooks";
-import db, {type Topic} from "./libs/db.ts";
+import db, {type SavedPage, type Topic} from "./libs/db.ts";
 import {colorOptions} from "./libs/global.ts";
 import Header2 from "./components/header2.tsx";
 import SavedPageCard from "./components/saved_page.tsx";
@@ -57,9 +57,12 @@ const App: React.FC = () => {
         []
     );
 
-    const savedPages = useLiveQuery(
-        () => selectedTopic ? db.getSavedPagesByTopicId(selectedTopic.id) : db.getAllSavedPages(),
-        [selectedTopic],
+    const savedPages = useLiveQuery<SavedPage[]>(
+        () => {
+            if (!selectedTopic) return [] as SavedPage[];
+            return db.getSavedPagesByTopicId(selectedTopic.id);
+        },
+        [selectedTopic?.id],
     );
 
     const handleCreateTopic = async (name: string, color_tag_rgb: string) => {
