@@ -1,5 +1,5 @@
 import React from "react";
-import {Globe, Pencil, Trash2} from "lucide-react";
+import {Globe, Trash2} from "lucide-react";
 import type {SavedPage} from "../libs/db.ts";
 import "../styles/saved_page.css";
 
@@ -28,11 +28,6 @@ const SavedPageCard: React.FC<SavedPageCardProps> = ({ page, onDelete}) => {
                 <p className="page-summary">{page.summary}</p>
             </div>
             <div className="card-actions">
-                <button className="action-button" onClick={(e) => {
-                    e.stopPropagation(); /* Edit */
-                }}>
-                    <Pencil size={16} />
-                </button>
                 <button className="action-button" onClick={(e) => {
                     e.stopPropagation(); /* Delete */
                     onDelete();

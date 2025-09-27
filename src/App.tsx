@@ -9,6 +9,7 @@ import {colorOptions} from "./libs/global.ts";
 import Header2 from "./components/header2.tsx";
 import SavedPageCard from "./components/saved_page.tsx";
 import {showToast} from "./components/toast.tsx";
+import ConfirmationModal from "./components/confirmation.tsx";
 
 // --- Main App Component ---
 const App: React.FC = () => {
@@ -19,6 +20,24 @@ const App: React.FC = () => {
 
     const openModal = () => setIsModalOpen(true);
     const closeModal = () => setIsModalOpen(false);
+
+    const [confirmOpen, setConfirmOpen] = useState(false);
+    const [confirmTitle, setConfirmTitle] = useState("");
+    const [confirmMessage, setConfirmMessage] = useState("");
+    const [confirmAction, setConfirmAction] = useState<() => Promise<void> | void>(() => {});
+
+    const openConfirm = (
+        title: string,
+        message: string,
+        onConfirm: () => Promise<void> | void
+    ) => {
+        setConfirmTitle(title);
+        setConfirmMessage(message);
+        setConfirmAction(() => onConfirm);
+        setConfirmOpen(true);
+    };
+
+    const closeConfirm = () => setConfirmOpen(false);
 
     const topics = useLiveQuery(
         () => db.getAllTopics(),
@@ -101,6 +120,46 @@ const App: React.FC = () => {
         setCurrentView('list');
     };
 
+    const handleDeleteTopic = (topic: Topic) => {
+        openConfirm(
+            "Delete Topic",
+            `Are you sure you want to delete the topic "${topic.name}"? All the saved pages within it will also be removed.`,
+            async () => {
+                try {
+                    await db.deleteTopicAndItsPages(topic.id);
+                    if (selectedTopic?.id === topic.id) {
+                        setSelectedTopic(null);
+                        setCurrentView('list');
+                    }
+                    showToast("Topic deleted.");
+                } catch (e) {
+                    console.error(e);
+                    showToast("Failed to delete topic.");
+                } finally {
+                    closeConfirm();
+                }
+            }
+        );
+    };
+
+    const handleDeleteSavedPage = (pageId: number, title?: string) => {
+        openConfirm(
+            "Delete Page",
+            `Are you sure you want to delete${title ? ` "${title}"` : ""}?`,
+            async () => {
+                try {
+                    await db.deletePage(pageId);
+                    showToast("Page deleted.");
+                } catch (e) {
+                    console.error(e);
+                    showToast("Failed to delete page.");
+                } finally {
+                    closeConfirm();
+                }
+            }
+        );
+    };
+
     return (
         <>
             <div className={`app-container ${isModalOpen ? 'modal-open' : ''}`}>
@@ -116,17 +175,36 @@ const App: React.FC = () => {
                             <TopicCard
                                 key={topic.id}
                                 topic={topic}
-                                onClick={() => handleCardClick(topic)} onDelete={()=> console.log("delete topic")}/>
+                                onClick={() => handleCardClick(topic)}
+                                onDelete={(e?: React.MouseEvent) => {
+                                    e?.stopPropagation?.();
+                                    handleDeleteTopic(topic);
+                                }}
+                            />
                         ))
                     ) : (
                         savedPages?.map(page => (
-                                <SavedPageCard key={page.id} page={page} onDelete={()=>console.log("delete page")}/>
+                                <SavedPageCard key={page.id} page={page}
+                                               onDelete={(e?: React.MouseEvent) => {
+                                                   e?.stopPropagation?.();
+                                                   handleDeleteSavedPage(page.id, page.title);
+                                               }}
+                                />
                             ))
                     )}
                 </div>
             </div>
 
             {isModalOpen && <CreateTopicModal onClose={closeModal} onCreate={handleCreateTopic} />}
+            <ConfirmationModal
+                open={confirmOpen}
+                title={confirmTitle}
+                message={confirmMessage}
+                onClose={closeConfirm}
+                onConfirm={async () => {
+                    await confirmAction?.();
+                }}
+            />
         </>
     );
 };

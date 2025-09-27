@@ -109,6 +109,38 @@ class CollectMindDB extends Dexie {
             is_deleted: 0,
         });
     }
+
+    async deleteTopicAndItsPages(topicId: number): Promise<void> {
+        const now = Date.now();
+
+        await this.transaction('rw', this.topics, this.saved_pages, async () => {
+            const updated = await this.topics.update(topicId, {
+                is_deleted: 1 as 0 | 1,
+                update_time: now,
+            });
+            if (updated === 0) {
+                throw new Error(`Topic ${topicId} not found or already deleted`);
+            }
+
+            await this.saved_pages
+                .where('topic_id')
+                .equals(topicId)
+                .and(p => p.is_deleted === 0)
+                .modify({ is_deleted: 1 as 0 | 1, update_time: now });
+        });
+    }
+
+    async deletePage(pageId: number): Promise<void> {
+        const now = Date.now();
+        const updated = await this.saved_pages.update(pageId, {
+            is_deleted: 1 as 0 | 1,
+            update_time: now,
+        });
+        if (updated === 0) {
+            throw new Error(`Saved page ${pageId} not found or already deleted`);
+        }
+    }
+
 }
 
 const db = new CollectMindDB();
