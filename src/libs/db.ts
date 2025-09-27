@@ -14,6 +14,7 @@ export interface Topic {
 export interface SavedPage {
     id: number;
     topic_id: number;
+    url: string;
     title: string;
     icon: string;
     summary: string;
@@ -37,7 +38,7 @@ class CollectMindDB extends Dexie {
                 '++id, name, color_tag, color_tag_rgb, summary, create_time, update_time, is_deleted, [is_deleted+create_time]',
 
             saved_pages:
-                '++id, topic_id, title, icon, summary, create_time, update_time, is_deleted, [is_deleted+create_time], [topic_id+is_deleted+create_time]',
+                '++id, topic_id, url, title, icon, summary, create_time, update_time, is_deleted, [is_deleted+create_time], [topic_id+is_deleted+create_time]',
         });
     }
 
@@ -91,6 +92,7 @@ class CollectMindDB extends Dexie {
 
     async addSavedPage(args: {
         topic_id: number;
+        url: string;
         title: string;
         icon: string;
         summary?: string;
@@ -98,6 +100,7 @@ class CollectMindDB extends Dexie {
         const now = Date.now();
         return this.saved_pages.add({
             topic_id: args.topic_id,
+            url: args.url,
             title: args.title,
             icon: args.icon,
             summary: args.summary ?? 'The summary is being generated, please wait a second...',

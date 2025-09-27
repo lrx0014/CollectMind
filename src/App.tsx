@@ -8,6 +8,7 @@ import db, {type Topic} from "./libs/db.ts";
 import {colorOptions} from "./libs/global.ts";
 import Header2 from "./components/header2.tsx";
 import SavedPageCard from "./components/saved_page.tsx";
+import {showToast} from "./components/toast.tsx";
 
 // --- Main App Component ---
 const App: React.FC = () => {
@@ -53,8 +54,18 @@ const App: React.FC = () => {
                 const currentTab = tabs[0];
 
                 if (currentTab && currentTab.url && currentTab.title) {
+
+                    const isAlreadySaved = savedPages?.filter(page => page.topic_id === selectedTopic.id)
+                        .some(page => page.url === currentTab.url);
+
+                    if (isAlreadySaved) {
+                        showToast("You've saved this page once.");
+                        return;
+                    }
+
                     await db.addSavedPage({
                         topic_id: selectedTopic.id,
+                        url: currentTab.url,
                         title: currentTab.title,
                         icon: `https://www.google.com/s2/favicons?domain=${new URL(currentTab.url).hostname}&sz=128`,
                     });
@@ -70,6 +81,7 @@ const App: React.FC = () => {
             try {
                 await db.addSavedPage({
                     topic_id: selectedTopic.id,
+                    url: "https://google.com",
                     title: 'Mock Page Title',
                     icon: 'https://www.google.com/s2/favicons?domain=example.com&sz=128',
                 });
