@@ -1,0 +1,74 @@
+.chat-input-container {
+    padding: 10px 20px;
+    background: rgba(255, 255, 255, 0.7);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    border-top: 1px solid rgba(0,0,0,0.1);
+    flex-shrink: 0;
+}
+.chat-input-wrapper {
+    display: flex;
+    align-items: flex-end; /* 关键：底部对齐 */
+    gap: 12px;
+    background-color: #fff;
+    border-radius: 25px;
+    padding: 8px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+.chat-input {
+    flex-grow: 1;
+    border: none;
+    outline: none;
+    background: none;
+    font-size: 16px;
+    line-height: 1.4;
+    padding: 6px;
+    color: #333;
+    resize: none;
+    max-height: 120px;
+    overflow-y: auto;
+}
+.chat-send-button {
+    background-color: #333;
+    color: #fff;
+    border: none;
+    border-radius: 50%;
+    width: 36px;
+    height: 36px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+    flex-shrink: 0;
+}
+.chat-send-button:hover { background-color: #555; }
+
+.chat-mode-toggle {
+    position: relative;
+    width: 52px;
+    height: 28px;
+    /* 移除背景颜色，由 style 属性控制 */
+    border-radius: 14px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+    flex-shrink: 0;
+}
+.toggle-knob {
+    position: absolute;
+    top: 2px;
+    left: 2px;
+    width: 24px;
+    height: 24px;
+    background-color: white;
+    border-radius: 50%;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: transform 0.3s ease, color 0.3s ease;
+    /* 移除颜色，由 style 属性控制 */
+}
+.chat-mode-toggle.page-mode .toggle-knob {
+    transform: translateX(24px);
+}

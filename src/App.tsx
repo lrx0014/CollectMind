@@ -10,6 +10,7 @@ import SavedPageCard from "./components/saved_page_card.tsx";
 import {showToast} from "./components/toast.tsx";
 import ConfirmationModal from "./components/confirmation.tsx";
 import CreateOrUpdateTopicModal from "./components/create_or_update_topic_modal.tsx";
+import ChatInput from "./components/chat_box.tsx";
 
 // --- Main App Component ---
 const App: React.FC = () => {
@@ -232,37 +233,48 @@ const App: React.FC = () => {
         <>
             <div className={`app-container ${createModalOpen ? 'modal-open' : ''}`}>
 
-                {currentView === 'list' && <HeaderComponent onNewTopicClick={openModal} />}
-                {currentView === 'detail' && selectedTopic && (
-                    <Header2 topicName={selectedTopic.name} onBack={handleBackToList} onAddPage={handleAddCurrentPage} />
-                )}
-
-                <div className="content-area">
-                    {currentView === 'list' ? (
-                        topics?.map((topic) => (
-                            <TopicCard
-                                key={topic.id}
-                                topic={topic}
-                                onClick={() => handleCardClick(topic)}
-                                onDelete={(e?: React.MouseEvent) => {
-                                    e?.stopPropagation?.();
-                                    handleDeleteTopic(topic);
-                                }}
-                                onEdit={() => openEditTopic(topic)}
-                            />
-                        ))
-                    ) : (
-                        savedPages?.map(page => (
-                                <SavedPageCard key={page.id} page={page}
-                                               onClick={() => handlePageCardClick(page)}
-                                               onDelete={(e?: React.MouseEvent) => {
-                                                   e?.stopPropagation?.();
-                                                   handleDeleteSavedPage(page.id, page.title);
-                                               }}
-                                />
-                            ))
-                    )}
-                </div>
+                {currentView === 'list'
+                    ? (
+                        <>
+                            <HeaderComponent onNewTopicClick={openModal} />
+                            <div className="content-area">
+                                {topics?.map((topic) => (
+                                    <TopicCard
+                                        key={topic.id}
+                                        topic={topic}
+                                        onClick={() => handleCardClick(topic)}
+                                        onEdit={() => openEditTopic(topic)}
+                                        onDelete={() => handleDeleteTopic(topic)}
+                                    />
+                                ))}
+                            </div>
+                        </>
+                    )
+                    : selectedTopic && (
+                    <>
+                        <Header2
+                            topicName={selectedTopic.name}
+                            onBack={handleBackToList}
+                            onAddPage={handleAddCurrentPage}
+                        />
+                        <div className="detail-view-container">
+                            <div className="content-area">
+                                {savedPages?.filter(page => page.topic_id === selectedTopic?.id)
+                                    .map(page => (
+                                        <SavedPageCard
+                                            key={page.id}
+                                            page={page}
+                                            onClick={() => handlePageCardClick(page)}
+                                            onDelete={() => handleDeleteSavedPage(page.id, page.title)}
+                                        />
+                                    ))
+                                }
+                            </div>
+                            <ChatInput topicName={selectedTopic.name} />
+                        </div>
+                    </>
+                )
+                }
             </div>
 
             {createModalOpen && <CreateOrUpdateTopicModal mode="create" onClose={closeModal} onCreate={handleCreateTopic} />}

@@ -30,3 +30,14 @@
     filter: blur(4px);
     pointer-events: none;
 }
+
+.detail-view-container {
+    display: flex;
+    flex-direction: column;
+    flex-grow: 1;
+    position: relative;
+    min-height: 0;
+}
+.detail-view-container .content-area {
+    padding-bottom: 90px;
+}
