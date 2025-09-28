@@ -7,12 +7,13 @@ export interface ChatMessage {
     id: number;
     sender: 'user' | 'ai';
     text: string;
+    isLoading?: boolean;
 }
 
 interface ChatContainerProps {
     topicName: string;
     messages: ChatMessage[];
-    onSendMessage: (message: string, mode: 'topic' | 'page') => void;
+    onSendMessage: (message: string, mode: 'topic' | 'page') => Promise<void> | void;
     isMaximized: boolean;
     setIsMaximized: (isMax: boolean) => void;
 }
@@ -39,10 +40,12 @@ const ChatContainer: React.FC<ChatContainerProps> = ({ topicName, messages, onSe
     }, [messages, isMaximized]);
 
     const handleSend = () => {
-        if (message.trim()) {
-            onSendMessage(message, chatMode);
-            setMessage('');
+        const trimmed = message.trim();
+        if (!trimmed) {
+            return;
         }
+        setMessage('');
+        void onSendMessage(trimmed, chatMode);
     };
 
     const toggleStyle = { backgroundColor: chatMode === 'page' ? '#4A90E2' : '#50E3C2' };
@@ -96,10 +99,21 @@ const ChatContainer: React.FC<ChatContainerProps> = ({ topicName, messages, onSe
             </div>
             <div className="chat-view-messages">
                 {messages.map(msg => (
-                    <div key={msg.id} className={`message-bubble ${msg.sender}`}>
-                        {msg.sender === 'ai' ? (
-                            <div dangerouslySetInnerHTML={{ __html: msg.text }} />
-                        ) : ( msg.text )}
+                    <div key={msg.id} className={`message-bubble ${msg.sender}${msg.isLoading ? ' loading' : ''}`}>
+                        {msg.isLoading ? (
+                            <div className="loading-ellipsis" aria-label="Loading AI response">
+                                <span />
+                                <span />
+                                <span />
+                            </div>
+                        ) : (
+                            msg.text.split(/\n/).map((line, index, arr) => (
+                                <React.Fragment key={index}>
+                                    {line}
+                                    {index < arr.length - 1 && <br />}
+                                </React.Fragment>
+                            ))
+                        )}
                     </div>
                 ))}
                 <div ref={messagesEndRef} />

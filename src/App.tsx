@@ -12,6 +12,7 @@ import ConfirmationModal from "./components/confirmation.tsx";
 import CreateOrUpdateTopicModal from "./components/create_or_update_topic_modal.tsx";
 import {type ChatMessage} from "./components/chat_container.tsx";
 import ChatContainer from "./components/chat_container.tsx";
+import {prompt} from "./libs/prompt.ts";
 
 // --- Main App Component ---
 const App: React.FC = () => {
@@ -233,24 +234,52 @@ const App: React.FC = () => {
         }
     };
 
-    const handleSendMessage = (message: string, mode: 'topic' | 'page') => {
+    const handleSendMessage = async (message: string, mode: 'topic' | 'page') => {
+        const userMessageId = Date.now();
+        const loadingMessageId = userMessageId + Math.random();
+
         const newUserMessage: ChatMessage = {
-            id: Date.now(),
+            id: userMessageId,
             sender: 'user',
-            text: message
+            text: message,
         };
 
-        setChatMessages(prev => [...prev, newUserMessage]);
+        const loadingMessage: ChatMessage = {
+            id: loadingMessageId,
+            sender: 'ai',
+            text: '',
+            isLoading: true,
+        };
+
+        setChatMessages(prev => [...prev, newUserMessage, loadingMessage]);
         setIsChatMaximized(true);
 
-        setTimeout(() => {
-            const aiResponse: ChatMessage = {
-                id: Date.now() + 1,
-                sender: 'ai',
-                text: `This is a mock AI response about "${message} (${mode})". It supports <strong>bold text</strong> and <a href="https://example.com" target="_blank">links</a>.`
-            };
-            setChatMessages(prev => [...prev, aiResponse]);
-        }, 1000);
+        const topicName = selectedTopic?.name ?? 'Untitled Topic';
+        const promptInput = mode === 'topic'
+            ? `You are assisting with the topic "${topicName}". Respond to the user message below.
+
+User message:
+${message}`
+            : `You are assisting with a saved page under the topic "${topicName}". Respond to the user message below.
+
+User message:
+${message}`;
+
+        try {
+            const aiText = await prompt(promptInput);
+            setChatMessages(prev => prev.map(msg => (
+                msg.id === loadingMessageId
+                    ? { ...msg, text: aiText || 'AI returned an empty response.', isLoading: false }
+                    : msg
+            )));
+        } catch (error) {
+            console.error('Failed to fetch AI response:', error);
+            setChatMessages(prev => prev.map(msg => (
+                msg.id === loadingMessageId
+                    ? { ...msg, text: 'Failed to fetch AI response. Please try again.', isLoading: false }
+                    : msg
+            )));
+        }
     };
 
     return (
@@ -349,4 +378,3 @@ const App: React.FC = () => {
 };
 
 export default App;
-
