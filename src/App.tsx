@@ -13,6 +13,7 @@ import CreateOrUpdateTopicModal from "./components/create_or_update_topic_modal.
 import {type ChatMessage} from "./components/chat_container.tsx";
 import ChatContainer from "./components/chat_container.tsx";
 import {prompt} from "./libs/prompt.ts";
+import SettingsOverlay from "./components/settings_overlay.tsx";
 
 // --- Main App Component ---
 const App: React.FC = () => {
@@ -35,6 +36,7 @@ const App: React.FC = () => {
     const [topicSearchQuery, setTopicSearchQuery] = useState("");
     const [isPageSearchActive, setIsPageSearchActive] = useState(false);
     const [pageSearchQuery, setPageSearchQuery] = useState("");
+    const [isSettingsOpen, setIsSettingsOpen] = useState(false);
 
     const openConfirm = (
         title: string,
@@ -279,6 +281,9 @@ const App: React.FC = () => {
         });
     };
 
+    const openSettings = () => setIsSettingsOpen(true);
+    const closeSettings = () => setIsSettingsOpen(false);
+
     const handleSendMessage = async (message: string, mode: 'topic' | 'page') => {
         const userMessageId = Date.now();
         const loadingMessageId = userMessageId + Math.random();
@@ -329,7 +334,7 @@ ${message}`;
 
     return (
         <>
-            <div className={`app-container ${createModalOpen ? 'modal-open' : ''}`}>
+            <div className={`app-container ${(createModalOpen || isSettingsOpen) ? 'modal-open' : ''}`}>
                 <div className={isChatMaximized ? 'app-content-wrapper chat-active' : 'app-content-wrapper'}>
                     {currentView === 'list'
                         ? (
@@ -341,6 +346,7 @@ ${message}`;
                                     onToggleSearch={toggleTopicSearch}
                                     onSearchChange={(value) => setTopicSearchQuery(value)}
                                     onClearSearch={() => setTopicSearchQuery("")}
+                                    onSettingsClick={openSettings}
                                 />
                                 <div className="content-area">
                                     {visibleTopics.map((topic) => (
@@ -366,6 +372,7 @@ ${message}`;
                                 onToggleSearch={togglePageSearch}
                                 onSearchChange={(value) => setPageSearchQuery(value)}
                                 onClearSearch={() => setPageSearchQuery("")}
+                                onSettingsClick={openSettings}
                             />
                             <div className="detail-view-container">
                                 <div className="content-area">
@@ -428,6 +435,13 @@ ${message}`;
                 onConfirm={async () => {
                     await confirmAction?.();
                 }}
+            />
+
+            <SettingsOverlay
+                open={isSettingsOpen}
+                onClose={closeSettings}
+                appName="CollectMind"
+                version="0.1.0"
             />
         </>
     );

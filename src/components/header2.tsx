@@ -11,6 +11,7 @@ interface Toolbar2Props {
     onToggleSearch: () => void;
     onSearchChange: (value: string) => void;
     onClearSearch: () => void;
+    onSettingsClick: () => void;
 }
 
 const Header2: React.FC<Toolbar2Props> = ({
@@ -22,6 +23,7 @@ const Header2: React.FC<Toolbar2Props> = ({
     onToggleSearch,
     onSearchChange,
     onClearSearch,
+    onSettingsClick,
 }) => {
     const inputRef = useRef<HTMLInputElement>(null);
 
@@ -83,7 +85,9 @@ const Header2: React.FC<Toolbar2Props> = ({
                     ) : (
                         <Search size={22} className="icon" onClick={onToggleSearch} />
                     )}
-                    {!isSearchActive && <Settings size={22} className="icon" />}
+                    {!isSearchActive && (
+                        <Settings size={22} className="icon" onClick={onSettingsClick} />
+                    )}
                 </div>
             </div>
         </>

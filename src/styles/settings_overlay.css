@@ -1,0 +1,67 @@
+.settings-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+    padding: clamp(16px, 5vw, 32px);
+    box-sizing: border-box;
+}
+
+.settings-backdrop {
+    position: absolute;
+    inset: 0;
+    background: rgba(15, 23, 42, 0.55);
+}
+
+.settings-content {
+    position: relative;
+    z-index: 1;
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    padding: clamp(36px, 6vw, 48px) clamp(24px, 8vw, 64px);
+    border-radius: 24px;
+    text-align: center;
+    box-shadow: 0 20px 60px rgba(15, 23, 42, 0.25);
+    width: min(420px, 100%);
+}
+
+.settings-close {
+    position: absolute;
+    top: 16px;
+    right: 20px;
+    background: none;
+    border: none;
+    font-size: 24px;
+    color: #1f2937;
+    cursor: pointer;
+    line-height: 1;
+}
+
+.settings-close:hover {
+    color: #111827;
+}
+
+.settings-logo {
+    margin-bottom: 24px;
+    border-radius: 18px;
+    box-shadow: 0 8px 30px rgba(15, 23, 42, 0.2);
+}
+
+.settings-title {
+    margin: 0;
+    font-size: 28px;
+    font-weight: 600;
+    color: #111827;
+}
+
+.settings-version {
+    margin-top: 8px;
+    font-size: 16px;
+    color: #4b5563;
+}
