@@ -98,14 +98,58 @@ const App: React.FC = () => {
                         return;
                     }
 
-                    await db.addSavedPage({
+                    const pageId = await db.addSavedPage({
                         topic_id: selectedTopic.id,
                         url: currentTab.url,
                         title: currentTab.title,
                         icon: `https://www.google.com/s2/favicons?domain=${new URL(currentTab.url).hostname}&sz=128`,
                     });
+
+                    // extract text
+                    let pageText = "";
+                    try {
+                        const [{ result } = {} as any] = await chrome.scripting.executeScript({
+                            target: { tabId: currentTab.id! },
+                            func: () => {
+                                const root = document.querySelector("article, main, [role='main']") || document.body;
+                                root.querySelectorAll("script,style,noscript,nav,header,footer,aside,form,svg")
+                                    .forEach(el => el.remove());
+
+                                let text = root.textContent ?? "";
+                                if (root instanceof HTMLElement) {
+                                    text = root.innerText || text;
+                                }
+                                return text.replace(/\s+/g, " ").trim().slice(0, 120000);
+                            },
+                        });
+                        pageText = result || "";
+                    } catch (e) {
+                        console.warn("extract text failed:", e);
+                    }
+
+                    // send to background.ts
+                    chrome.runtime.sendMessage({
+                        type: "SUMMARIZE_SAVED_PAGE_WITH_TEXT",
+                        payload: {
+                            pageId,
+                            url: currentTab.url,
+                            title: currentTab.title,
+                            text: pageText,
+                        },
+                    }, (resp) => {
+                        if (chrome.runtime.lastError) {
+                            console.warn("BG message error:", chrome.runtime.lastError);
+                        } else if (!resp?.ok) {
+                            console.warn("BG summarize failed:", resp?.error);
+                        }
+                    });
+
+                    showToast("Page saved. Generating summary in background...");
+
                 } else {
                     console.error("Could not get title or URL from the current tab.");
+                    showToast("Cannot read current tab.");
+                    return;
                 }
             } catch (error) {
                 console.error("Error querying tabs:", error);

@@ -141,6 +141,14 @@ class CollectMindDB extends Dexie {
         }
     }
 
+    async updatePageSummary(pageId: number, summary: string): Promise<void> {
+        await this.saved_pages.update(pageId, {
+            summary,
+            update_time: Date.now(),
+        });
+    }
+
+
 }
 
 const db = new CollectMindDB();

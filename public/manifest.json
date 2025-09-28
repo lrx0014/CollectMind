@@ -10,18 +10,22 @@
     "128": "images/icon128.png"
   },
 
-  "permissions": ["sidePanel", "tabs", "scripting"],
+  "permissions": ["sidePanel", "tabs", "scripting", "offscreen"],
   "host_permissions": ["<all_urls>"],
   "action": {
     "default_title": "CollectMind"
   },
 
   "background": {
-    "service_worker": "background.js",
+    "service_worker": "src/libs/background.ts",
     "type": "module"
   },
 
   "side_panel": {
     "default_path": "index.html"
-  }
+  },
+
+  "web_accessible_resources": [
+    { "resources": ["offscreen.html"], "matches": ["<all_urls>"] }
+  ]
 }
