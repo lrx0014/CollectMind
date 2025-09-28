@@ -6,7 +6,7 @@ import {useLiveQuery} from "dexie-react-hooks";
 import db, {type SavedPage, type Topic} from "./libs/db.ts";
 import {colorOptions} from "./libs/global.ts";
 import Header2 from "./components/header2.tsx";
-import SavedPageCard from "./components/saved_page.tsx";
+import SavedPageCard from "./components/saved_page_card.tsx";
 import {showToast} from "./components/toast.tsx";
 import ConfirmationModal from "./components/confirmation.tsx";
 import CreateOrUpdateTopicModal from "./components/create_or_update_topic_modal.tsx";
@@ -220,6 +220,14 @@ const App: React.FC = () => {
         );
     };
 
+    const handlePageCardClick = (page: SavedPage) => {
+        if (typeof chrome !== 'undefined' && chrome.tabs) {
+            chrome.tabs.create({ url: page.url }).catch(error => console.error("Error creating tab:", error));
+        } else {
+            window.open(page.url, '_blank');
+        }
+    };
+
     return (
         <>
             <div className={`app-container ${createModalOpen ? 'modal-open' : ''}`}>
@@ -246,6 +254,7 @@ const App: React.FC = () => {
                     ) : (
                         savedPages?.map(page => (
                                 <SavedPageCard key={page.id} page={page}
+                                               onClick={() => handlePageCardClick(page)}
                                                onDelete={(e?: React.MouseEvent) => {
                                                    e?.stopPropagation?.();
                                                    handleDeleteSavedPage(page.id, page.title);

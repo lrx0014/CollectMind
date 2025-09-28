@@ -14,7 +14,7 @@ interface TopicCardProps {
 
 const TopicCard: React.FC<TopicCardProps> = ({topic, onClick, onDelete, onEdit}) => {
     return (
-        <div className="topic-card-new" onClick={onClick}>
+        <div className="topic-card-new" onClick={onClick} title={topic.name}>
             <div className="color-tag" style={{backgroundColor: topic.color_tag_rgb}}></div>
             <div className="card-content">
                 <h3 className="card-title-new">{topic.name}</h3>

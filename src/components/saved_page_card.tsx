@@ -4,23 +4,24 @@ import type {SavedPage} from "../libs/db.ts";
 import "../styles/saved_page.css";
 
 interface SavedPageCardProps {
-    page: SavedPage;
-    onDelete: () => void;
+    page: SavedPage,
+    onDelete: () => void,
+    onClick?: () => void
 }
 
-const SavedPageCard: React.FC<SavedPageCardProps> = ({ page, onDelete}) => {
+const SavedPageCard: React.FC<SavedPageCardProps> = ({page, onDelete, onClick}) => {
     const handleImageError = (e: React.SyntheticEvent<HTMLImageElement, Event>) => {
         e.currentTarget.style.display = 'none'; // Hide broken image icon
         e.currentTarget.parentElement?.classList.add('no-image'); // Add class to show fallback
     };
 
     return (
-        <div className="page-card">
+        <div className="page-card" title={page.title} onClick={onClick}>
             <div className="page-logo">
                 {page.icon ? (
                     <img src={page.icon} alt="logo" onError={handleImageError}/>
                 ) : (
-                    <Globe size={24} />
+                    <Globe size={24}/>
                 )}
             </div>
             <div className="page-info">
@@ -32,7 +33,7 @@ const SavedPageCard: React.FC<SavedPageCardProps> = ({ page, onDelete}) => {
                     e.stopPropagation(); /* Delete */
                     onDelete();
                 }}>
-                    <Trash2 size={16} />
+                    <Trash2 size={16}/>
                 </button>
             </div>
         </div>
