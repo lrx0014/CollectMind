@@ -296,8 +296,7 @@ const App: React.FC = () => {
                                 </div>
                             </div>
                         </>
-                    )
-                    }
+                    )}
                 </div>
 
                 {currentView === 'detail' && selectedTopic && (
