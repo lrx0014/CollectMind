@@ -31,6 +31,10 @@ const App: React.FC = () => {
 
     const [isChatMaximized, setIsChatMaximized] = useState(false);
     const [chatMessages, setChatMessages] = useState<ChatMessage[]>([]);
+    const [isTopicSearchActive, setIsTopicSearchActive] = useState(false);
+    const [topicSearchQuery, setTopicSearchQuery] = useState("");
+    const [isPageSearchActive, setIsPageSearchActive] = useState(false);
+    const [pageSearchQuery, setPageSearchQuery] = useState("");
 
     const openConfirm = (
         title: string,
@@ -70,6 +74,23 @@ const App: React.FC = () => {
         },
         [selectedTopic?.id],
     );
+
+    const normalizedTopicQuery = topicSearchQuery.trim().toLowerCase();
+    const visibleTopics = (topics ?? []).filter(topic => {
+        if (!normalizedTopicQuery) return true;
+        return topic.name.toLowerCase().includes(normalizedTopicQuery);
+    });
+
+    const normalizedPageQuery = pageSearchQuery.trim().toLowerCase();
+    const visiblePages = (savedPages ?? []).filter(page => {
+        if (page.topic_id !== selectedTopic?.id) {
+            return false;
+        }
+        if (!normalizedPageQuery) return true;
+        const title = page.title?.toLowerCase() ?? "";
+        const url = page.url?.toLowerCase() ?? "";
+        return title.includes(normalizedPageQuery) || url.includes(normalizedPageQuery);
+    });
 
     const handleCreateTopic = async (name: string, color_tag_rgb: string) => {
         try {
@@ -179,11 +200,15 @@ const App: React.FC = () => {
     const handleCardClick = (topic: Topic) => {
         setSelectedTopic(topic);
         setCurrentView('detail');
+        setIsPageSearchActive(false);
+        setPageSearchQuery("");
     };
 
     const handleBackToList = () => {
         setSelectedTopic(null);
         setCurrentView('list');
+        setIsPageSearchActive(false);
+        setPageSearchQuery("");
     };
 
     const handleDeleteTopic = (topic: Topic) => {
@@ -232,6 +257,26 @@ const App: React.FC = () => {
         } else {
             window.open(page.url, '_blank');
         }
+    };
+
+    const toggleTopicSearch = () => {
+        setIsTopicSearchActive(prev => {
+            const next = !prev;
+            if (!next) {
+                setTopicSearchQuery("");
+            }
+            return next;
+        });
+    };
+
+    const togglePageSearch = () => {
+        setIsPageSearchActive(prev => {
+            const next = !prev;
+            if (!next) {
+                setPageSearchQuery("");
+            }
+            return next;
+        });
     };
 
     const handleSendMessage = async (message: string, mode: 'topic' | 'page') => {
@@ -289,9 +334,16 @@ ${message}`;
                     {currentView === 'list'
                         ? (
                             <>
-                                <HeaderComponent onNewTopicClick={openModal} />
+                                <HeaderComponent
+                                    onNewTopicClick={openModal}
+                                    isSearchActive={isTopicSearchActive}
+                                    searchQuery={topicSearchQuery}
+                                    onToggleSearch={toggleTopicSearch}
+                                    onSearchChange={(value) => setTopicSearchQuery(value)}
+                                    onClearSearch={() => setTopicSearchQuery("")}
+                                />
                                 <div className="content-area">
-                                    {topics?.map((topic) => (
+                                    {visibleTopics.map((topic) => (
                                         <TopicCard
                                             key={topic.id}
                                             topic={topic}
@@ -309,11 +361,15 @@ ${message}`;
                                 topicName={selectedTopic.name}
                                 onBack={handleBackToList}
                                 onAddPage={handleAddCurrentPage}
+                                isSearchActive={isPageSearchActive}
+                                searchQuery={pageSearchQuery}
+                                onToggleSearch={togglePageSearch}
+                                onSearchChange={(value) => setPageSearchQuery(value)}
+                                onClearSearch={() => setPageSearchQuery("")}
                             />
                             <div className="detail-view-container">
                                 <div className="content-area">
-                                    {savedPages?.filter(page => page.topic_id === selectedTopic?.id)
-                                        .map(page => (
+                                    {visiblePages.map(page => (
                                             <SavedPageCard
                                                 key={page.id}
                                                 page={page}
