@@ -41,3 +41,9 @@
 .detail-view-container .content-area {
     padding-bottom: 90px;
 }
+.detail-view-wrapper {
+    display: flex;
+    flex-direction: column;
+    flex-grow: 1;
+    min-height: 0;
+}

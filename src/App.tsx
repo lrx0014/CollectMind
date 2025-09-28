@@ -10,7 +10,8 @@ import SavedPageCard from "./components/saved_page_card.tsx";
 import {showToast} from "./components/toast.tsx";
 import ConfirmationModal from "./components/confirmation.tsx";
 import CreateOrUpdateTopicModal from "./components/create_or_update_topic_modal.tsx";
-import ChatInput from "./components/chat_box.tsx";
+import {type ChatMessage} from "./components/chat_container.tsx";
+import ChatContainer from "./components/chat_container.tsx";
 
 // --- Main App Component ---
 const App: React.FC = () => {
@@ -26,6 +27,9 @@ const App: React.FC = () => {
     const [confirmTitle, setConfirmTitle] = useState("");
     const [confirmMessage, setConfirmMessage] = useState("");
     const [confirmAction, setConfirmAction] = useState<() => Promise<void> | void>(() => {});
+
+    const [isChatMaximized, setIsChatMaximized] = useState(false);
+    const [chatMessages, setChatMessages] = useState<ChatMessage[]>([]);
 
     const openConfirm = (
         title: string,
@@ -229,52 +233,82 @@ const App: React.FC = () => {
         }
     };
 
+    const handleSendMessage = (message: string, mode: 'topic' | 'page') => {
+        const newUserMessage: ChatMessage = {
+            id: Date.now(),
+            sender: 'user',
+            text: message
+        };
+
+        setChatMessages(prev => [...prev, newUserMessage]);
+        setIsChatMaximized(true);
+
+        setTimeout(() => {
+            const aiResponse: ChatMessage = {
+                id: Date.now() + 1,
+                sender: 'ai',
+                text: `This is a mock AI response about "${message} (${mode})". It supports <strong>bold text</strong> and <a href="https://example.com" target="_blank">links</a>.`
+            };
+            setChatMessages(prev => [...prev, aiResponse]);
+        }, 1000);
+    };
+
     return (
         <>
             <div className={`app-container ${createModalOpen ? 'modal-open' : ''}`}>
-
-                {currentView === 'list'
-                    ? (
+                <div className={isChatMaximized ? 'app-content-wrapper chat-active' : 'app-content-wrapper'}>
+                    {currentView === 'list'
+                        ? (
+                            <>
+                                <HeaderComponent onNewTopicClick={openModal} />
+                                <div className="content-area">
+                                    {topics?.map((topic) => (
+                                        <TopicCard
+                                            key={topic.id}
+                                            topic={topic}
+                                            onClick={() => handleCardClick(topic)}
+                                            onEdit={() => openEditTopic(topic)}
+                                            onDelete={() => handleDeleteTopic(topic)}
+                                        />
+                                    ))}
+                                </div>
+                            </>
+                        )
+                        : selectedTopic && (
                         <>
-                            <HeaderComponent onNewTopicClick={openModal} />
-                            <div className="content-area">
-                                {topics?.map((topic) => (
-                                    <TopicCard
-                                        key={topic.id}
-                                        topic={topic}
-                                        onClick={() => handleCardClick(topic)}
-                                        onEdit={() => openEditTopic(topic)}
-                                        onDelete={() => handleDeleteTopic(topic)}
-                                    />
-                                ))}
+                            <Header2
+                                topicName={selectedTopic.name}
+                                onBack={handleBackToList}
+                                onAddPage={handleAddCurrentPage}
+                            />
+                            <div className="detail-view-container">
+                                <div className="content-area">
+                                    {savedPages?.filter(page => page.topic_id === selectedTopic?.id)
+                                        .map(page => (
+                                            <SavedPageCard
+                                                key={page.id}
+                                                page={page}
+                                                onClick={() => handlePageCardClick(page)}
+                                                onDelete={() => handleDeleteSavedPage(page.id, page.title)}
+                                            />
+                                        ))
+                                    }
+                                </div>
                             </div>
                         </>
                     )
-                    : selectedTopic && (
-                    <>
-                        <Header2
-                            topicName={selectedTopic.name}
-                            onBack={handleBackToList}
-                            onAddPage={handleAddCurrentPage}
-                        />
-                        <div className="detail-view-container">
-                            <div className="content-area">
-                                {savedPages?.filter(page => page.topic_id === selectedTopic?.id)
-                                    .map(page => (
-                                        <SavedPageCard
-                                            key={page.id}
-                                            page={page}
-                                            onClick={() => handlePageCardClick(page)}
-                                            onDelete={() => handleDeleteSavedPage(page.id, page.title)}
-                                        />
-                                    ))
-                                }
-                            </div>
-                            <ChatInput topicName={selectedTopic.name} />
-                        </div>
-                    </>
-                )
-                }
+                    }
+                </div>
+
+                {currentView === 'detail' && selectedTopic && (
+                    <ChatContainer
+                        topicName={selectedTopic.name}
+                        messages={chatMessages}
+                        onSendMessage={handleSendMessage}
+                        isMaximized={isChatMaximized}
+                        setIsMaximized={setIsChatMaximized}
+                    />
+                )}
             </div>
 
             {createModalOpen && <CreateOrUpdateTopicModal mode="create" onClose={closeModal} onCreate={handleCreateTopic} />}
