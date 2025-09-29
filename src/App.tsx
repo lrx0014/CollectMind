@@ -384,8 +384,10 @@ const App: React.FC = () => {
             throw new Error('Unable to read the active tab content. Try refreshing the page and running the query again.');
         }
 
+        const truncatedContent = content.slice(0, 20_000);
+
         return {
-            content,
+            content: truncatedContent,
             title: result?.title ?? currentTab.title ?? 'Untitled Page',
             url: result?.url ?? currentTab.url ?? 'Unknown URL',
         };
@@ -486,10 +488,20 @@ const App: React.FC = () => {
             });
         } catch (error) {
             console.error('Failed to fetch AI response:', error);
-            const fallbackText = error instanceof Error && error.message
-                ? error.message
-                : 'Failed to fetch AI response. Please try again.';
-            showToast('Failed to fetch AI response. Please try again.');
+            let fallbackText = 'Failed to fetch AI response. Please try again.';
+            if (error instanceof Error) {
+                if ((error as any).name === 'QuotaExceededError') {
+                    fallbackText = 'The request is too large for the AI to handle. Please shorten the conversation or context and try again.';
+                    showToast('AI request was too large. Try shortening the context.');
+                } else if (error.message) {
+                    fallbackText = error.message;
+                    showToast('Failed to fetch AI response. Please try again.');
+                } else {
+                    showToast('Failed to fetch AI response. Please try again.');
+                }
+            } else {
+                showToast('Failed to fetch AI response. Please try again.');
+            }
             try {
                 await db.addChatMessage({
                     topic_id: topicId,
