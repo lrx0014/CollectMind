@@ -23,13 +23,23 @@ export interface SavedPage {
     is_deleted: 0 | 1;
 }
 
+export interface ChatMessageRecord {
+    id: number;
+    topic_id: number;
+    sender: 'user' | 'ai';
+    text: string;
+    created_at: number;
+}
+
 // for db.ts internal only
 type DbTopic = Omit<Topic, 'id'> & { id?: number };
 type DbSavedPage = Omit<SavedPage, 'id'> & { id?: number };
+type DbChatMessage = Omit<ChatMessageRecord, 'id'> & { id?: number };
 
 class CollectMindDB extends Dexie {
     topics!: Table<DbTopic, number>;
     saved_pages!: Table<DbSavedPage, number>;
+    chat_messages!: Table<DbChatMessage, number>;
 
     constructor() {
         super('collect_mind_db');
@@ -39,6 +49,17 @@ class CollectMindDB extends Dexie {
 
             saved_pages:
                 '++id, topic_id, url, title, icon, summary, create_time, update_time, is_deleted, [is_deleted+create_time], [topic_id+is_deleted+create_time]',
+        });
+
+        this.version(2).stores({
+            topics:
+                '++id, name, color_tag, color_tag_rgb, summary, create_time, update_time, is_deleted, [is_deleted+create_time]',
+
+            saved_pages:
+                '++id, topic_id, url, title, icon, summary, create_time, update_time, is_deleted, [is_deleted+create_time], [topic_id+is_deleted+create_time]',
+
+            chat_messages:
+                '++id, topic_id, sender, created_at, [topic_id+created_at]',
         });
     }
 
@@ -70,6 +91,38 @@ class CollectMindDB extends Dexie {
             .toArray();
         return arr as SavedPage[];
 
+    }
+
+    async getAllChatMessages(): Promise<ChatMessageRecord[]> {
+        const arr = await this.chat_messages
+            .orderBy('[topic_id+created_at]')
+            .toArray();
+        return arr as ChatMessageRecord[];
+    }
+
+    async getChatMessagesByTopic(topicId: number): Promise<ChatMessageRecord[]> {
+        const arr = await this.chat_messages
+            .where('[topic_id+created_at]')
+            .between([topicId, Dexie.minKey], [topicId, Dexie.maxKey])
+            .toArray();
+        return arr as ChatMessageRecord[];
+    }
+
+    async addChatMessage(args: { topic_id: number; sender: 'user' | 'ai'; text: string; created_at?: number; }): Promise<number> {
+        const created_at = args.created_at ?? Date.now();
+        return this.chat_messages.add({
+            topic_id: args.topic_id,
+            sender: args.sender,
+            text: args.text,
+            created_at,
+        });
+    }
+
+    async clearChatMessagesByTopic(topicId: number): Promise<void> {
+        await this.chat_messages
+            .where('topic_id')
+            .equals(topicId)
+            .delete();
     }
 
     async addTopic(args: {

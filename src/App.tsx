@@ -1,9 +1,9 @@
-import React, {useState} from 'react';
+import React, {useMemo, useState} from 'react';
 import HeaderComponent from "./components/header.tsx";
 import "./styles/app.css";
 import TopicCard from "./components/topic_card.tsx";
 import {useLiveQuery} from "dexie-react-hooks";
-import db, {type SavedPage, type Topic} from "./libs/db.ts";
+import db, {type ChatMessageRecord, type SavedPage, type Topic} from "./libs/db.ts";
 import {colorOptions} from "./libs/global.ts";
 import Header2 from "./components/header2.tsx";
 import SavedPageCard from "./components/saved_page_card.tsx";
@@ -31,7 +31,7 @@ const App: React.FC = () => {
     const [confirmAction, setConfirmAction] = useState<() => Promise<void> | void>(() => {});
 
     const [isChatMaximized, setIsChatMaximized] = useState(false);
-    const [chatMessagesByTopic, setChatMessagesByTopic] = useState<Record<number, ChatMessage[]>>({});
+    const [pendingAiMessages, setPendingAiMessages] = useState<Record<number, ChatMessage[]>>({});
     const [isTopicSearchActive, setIsTopicSearchActive] = useState(false);
     const [topicSearchQuery, setTopicSearchQuery] = useState("");
     const [isPageSearchActive, setIsPageSearchActive] = useState(false);
@@ -76,6 +76,34 @@ const App: React.FC = () => {
         },
         [selectedTopic?.id],
     );
+
+    const chatMessagesFromDb = useLiveQuery<ChatMessageRecord[]>(
+        () => db.getAllChatMessages(),
+        [],
+    );
+
+    const persistedChatMessagesByTopic = useMemo<Record<number, ChatMessage[]>>(() => {
+        const map: Record<number, ChatMessage[]> = {};
+        for (const entry of chatMessagesFromDb ?? []) {
+            if (!map[entry.topic_id]) {
+                map[entry.topic_id] = [];
+            }
+            map[entry.topic_id].push({
+                id: entry.id,
+                sender: entry.sender,
+                text: entry.text,
+            });
+        }
+        return map;
+    }, [chatMessagesFromDb]);
+
+    const messagesForActiveTopic = useMemo<ChatMessage[]>(() => {
+        if (!selectedTopic) return [];
+        const topicId = selectedTopic.id;
+        const persisted = persistedChatMessagesByTopic[topicId] ?? [];
+        const pending = pendingAiMessages[topicId] ?? [];
+        return [...persisted, ...pending];
+    }, [selectedTopic?.id, persistedChatMessagesByTopic, pendingAiMessages]);
 
     const normalizedTopicQuery = topicSearchQuery.trim().toLowerCase();
     const visibleTopics = (topics ?? []).filter(topic => {
@@ -284,6 +312,40 @@ const App: React.FC = () => {
     const openSettings = () => setIsSettingsOpen(true);
     const closeSettings = () => setIsSettingsOpen(false);
 
+    const removePendingAiMessage = (topicId: number, messageId: number) => {
+        setPendingAiMessages(prev => {
+            const existing = prev[topicId];
+            if (!existing) return prev;
+            const filtered = existing.filter(msg => msg.id !== messageId);
+            if (filtered.length === existing.length) return prev;
+            if (filtered.length === 0) {
+                const { [topicId]: _removed, ...rest } = prev;
+                return rest;
+            }
+            return {
+                ...prev,
+                [topicId]: filtered,
+            };
+        });
+    };
+
+    const handleClearChatHistory = async () => {
+        if (!selectedTopic) return;
+        const topicId = selectedTopic.id;
+        try {
+            await db.clearChatMessagesByTopic(topicId);
+            showToast('Chat cleared.');
+        } catch (error) {
+            console.error('Failed to clear chat messages:', error);
+            showToast('Failed to clear chat. Please try again.');
+        }
+        setPendingAiMessages(prev => {
+            if (!prev[topicId]) return prev;
+            const { [topicId]: _removed, ...rest } = prev;
+            return rest;
+        });
+    };
+
     const fetchActiveTabContext = async () => {
         if (typeof chrome === 'undefined' || !chrome.tabs || !chrome.scripting) {
             throw new Error('Active tab content is only available inside the Chrome extension environment.');
@@ -382,15 +444,22 @@ const App: React.FC = () => {
         }
 
         const topicId = selectedTopic.id;
-        const userMessageId = Date.now();
-        const loadingMessageId = userMessageId + Math.random();
 
-        const newUserMessage: ChatMessage = {
-            id: userMessageId,
-            sender: 'user',
-            text: message,
-        };
+        try {
+            await db.addChatMessage({
+                topic_id: topicId,
+                sender: 'user',
+                text: message,
+            });
+        } catch (error) {
+            console.error('Failed to store user message:', error);
+            showToast('Failed to send message. Please try again.');
+            return;
+        }
 
+        setIsChatMaximized(true);
+
+        const loadingMessageId = -Math.floor(Date.now() + Math.random() * 1000);
         const loadingMessage: ChatMessage = {
             id: loadingMessageId,
             sender: 'ai',
@@ -398,48 +467,39 @@ const App: React.FC = () => {
             isLoading: true,
         };
 
-        setChatMessagesByTopic(prev => {
-            const nextMessages = prev[topicId] ? [...prev[topicId]] : [];
-            nextMessages.push(newUserMessage, loadingMessage);
+        setPendingAiMessages(prev => {
+            const existing = prev[topicId] ?? [];
             return {
                 ...prev,
-                [topicId]: nextMessages,
+                [topicId]: [...existing, loadingMessage],
             };
         });
-        setIsChatMaximized(true);
 
         try {
             const promptInput = await buildPromptInput(message, mode);
             const aiText = await prompt(promptInput);
-            setChatMessagesByTopic(prev => {
-                const existing = prev[topicId] ?? [];
-                const updated = existing.map(msg => (
-                    msg.id === loadingMessageId
-                        ? { ...msg, text: aiText || 'AI returned an empty response.', isLoading: false }
-                        : msg
-                ));
-                return {
-                    ...prev,
-                    [topicId]: updated,
-                };
+            await db.addChatMessage({
+                topic_id: topicId,
+                sender: 'ai',
+                text: aiText || 'AI returned an empty response.',
             });
         } catch (error) {
             console.error('Failed to fetch AI response:', error);
             const fallbackText = error instanceof Error && error.message
                 ? error.message
                 : 'Failed to fetch AI response. Please try again.';
-            setChatMessagesByTopic(prev => {
-                const existing = prev[topicId] ?? [];
-                const updated = existing.map(msg => (
-                    msg.id === loadingMessageId
-                        ? { ...msg, text: fallbackText, isLoading: false }
-                        : msg
-                ));
-                return {
-                    ...prev,
-                    [topicId]: updated,
-                };
-            });
+            showToast('Failed to fetch AI response. Please try again.');
+            try {
+                await db.addChatMessage({
+                    topic_id: topicId,
+                    sender: 'ai',
+                    text: fallbackText,
+                });
+            } catch (storeError) {
+                console.error('Failed to store fallback AI message:', storeError);
+            }
+        } finally {
+            removePendingAiMessage(topicId, loadingMessageId);
         }
     };
 
@@ -505,10 +565,11 @@ const App: React.FC = () => {
                 {currentView === 'detail' && selectedTopic && (
                     <ChatContainer
                         topicName={selectedTopic.name}
-                        messages={chatMessagesByTopic[selectedTopic.id] ?? []}
+                        messages={messagesForActiveTopic}
                         onSendMessage={handleSendMessage}
                         isMaximized={isChatMaximized}
                         setIsMaximized={setIsChatMaximized}
+                        onClearChat={handleClearChatHistory}
                     />
                 )}
             </div>

@@ -16,9 +16,10 @@ interface ChatContainerProps {
     onSendMessage: (message: string, mode: 'topic' | 'page') => Promise<void> | void;
     isMaximized: boolean;
     setIsMaximized: (isMax: boolean) => void;
+    onClearChat: () => Promise<void> | void;
 }
 
-const ChatContainer: React.FC<ChatContainerProps> = ({ topicName, messages, onSendMessage, isMaximized, setIsMaximized }) => {
+const ChatContainer: React.FC<ChatContainerProps> = ({ topicName, messages, onSendMessage, isMaximized, setIsMaximized, onClearChat }) => {
     const [chatMode, setChatMode] = useState<'topic' | 'page'>('topic');
     const [message, setMessage] = useState('');
     const textareaRef = useRef<HTMLTextAreaElement>(null);
@@ -93,6 +94,13 @@ const ChatContainer: React.FC<ChatContainerProps> = ({ topicName, messages, onSe
     return (
         <div className="chat-container maximized">
             <div className="chat-view-header">
+                <button
+                    className="chat-clear-button"
+                    onClick={() => { void onClearChat(); }}
+                    disabled={messages.length === 0}
+                >
+                    Clear Chat
+                </button>
                 <button className="chat-view-close-button" onClick={handleToggleMaximize}>
                     <ChevronDown size={20} />
                 </button>
