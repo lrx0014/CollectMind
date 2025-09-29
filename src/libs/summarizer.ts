@@ -25,7 +25,7 @@ export interface SummarizeOptions {
 }
 
 const cache = new Map<string, any>();
-const def = { type: "tldr" as SummaryType, format: "plain-text" as SummaryFormat, length: "short" as SummaryLength, maxChars: 40_000 };
+const def = { type: "key-points" as SummaryType, format: "plain-text" as SummaryFormat, length: "long" as SummaryLength, maxChars: 40_000 };
 const MAX_REDUCE_DEPTH = 4;
 const FIXED_CHUNK_SIZE = 8_000;
 

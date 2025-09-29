@@ -395,6 +395,7 @@ const App: React.FC = () => {
         const baseInstructions = [
             'You are CollectMind, a reference-driven assistant.',
             'Use only the provided reference materials to answer the user.',
+            'When you mention citing sources, it is better to indicate the title of the document instead of the document numbers.'
         ].join(' ');
 
         if (mode === 'topic') {
@@ -407,7 +408,7 @@ const App: React.FC = () => {
                 .map((page, index) => {
                     const summary = page.summary?.trim() || 'Summary is not available yet.';
                     const safeTitle = page.title?.trim() || 'Untitled page';
-                    return `Document ${index + 1}\nTitle: ${safeTitle}\nURL: ${page.url}\nSummary:\n${summary}`;
+                    return `Document ${index + 1}: ${safeTitle}\nURL: ${page.url}\nSummary:\n${summary}`;
                 });
 
             const referenceMaterial = topicPages.length > 0

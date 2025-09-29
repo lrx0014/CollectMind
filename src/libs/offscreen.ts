@@ -6,7 +6,12 @@ chrome.runtime.onMessage.addListener((msg, _sender, sendResponse) => {
         (async () => {
             try {
                 const { text, url, title } = msg.payload as { text: string; url: string; title: string };
-                const out = await summarize({ text: text || `${title} — ${new URL(url).hostname}` });
+                const out = await summarize({
+                    text: text || `${title} — ${new URL(url).hostname}`,
+                    type: 'key-points',
+                    format: 'plain-text',
+                    length: 'long',
+                });
                 console.log("summarized:", out?.slice(0, 120));
                 sendResponse({ ok: true, summary: String(out || "").trim() });
             } catch (e: any) {

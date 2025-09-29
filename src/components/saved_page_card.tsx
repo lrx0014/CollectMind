@@ -15,6 +15,15 @@ const SavedPageCard: React.FC<SavedPageCardProps> = ({page, onDelete, onClick}) 
         e.currentTarget.parentElement?.classList.add('no-image'); // Add class to show fallback
     };
 
+    const cleanedSummary = React.useMemo(() => {
+        if (!page.summary) return '';
+        return page.summary
+            .split(/\n+/)
+            .map(line => line.replace(/^\s*([-*•]+\s*)/, '').trim())
+            .filter(Boolean)
+            .join(' ');
+    }, [page.summary]);
+
     return (
         <div className="page-card" title={page.title} onClick={onClick}>
             <div className="page-logo">
@@ -26,7 +35,7 @@ const SavedPageCard: React.FC<SavedPageCardProps> = ({page, onDelete, onClick}) 
             </div>
             <div className="page-info">
                 <h4 className="page-title">{page.title}</h4>
-                <p className="page-summary">{page.summary}</p>
+                <p className="page-summary">{cleanedSummary}</p>
             </div>
             <div className="card-actions">
                 <button className="action-button" onClick={(e) => {
