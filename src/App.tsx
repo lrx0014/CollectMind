@@ -31,7 +31,7 @@ const App: React.FC = () => {
     const [confirmAction, setConfirmAction] = useState<() => Promise<void> | void>(() => {});
 
     const [isChatMaximized, setIsChatMaximized] = useState(false);
-    const [chatMessages, setChatMessages] = useState<ChatMessage[]>([]);
+    const [chatMessagesByTopic, setChatMessagesByTopic] = useState<Record<number, ChatMessage[]>>({});
     const [isTopicSearchActive, setIsTopicSearchActive] = useState(false);
     const [topicSearchQuery, setTopicSearchQuery] = useState("");
     const [isPageSearchActive, setIsPageSearchActive] = useState(false);
@@ -333,7 +333,6 @@ const App: React.FC = () => {
         const baseInstructions = [
             'You are CollectMind, a reference-driven assistant.',
             'Use only the provided reference materials to answer the user.',
-            'Do not invent, speculate, or rely on outside knowledge.',
         ].join(' ');
 
         if (mode === 'topic') {
@@ -377,6 +376,12 @@ const App: React.FC = () => {
     };
 
     const handleSendMessage = async (message: string, mode: 'topic' | 'page') => {
+        if (!selectedTopic) {
+            showToast('Please select a topic before chatting.');
+            return;
+        }
+
+        const topicId = selectedTopic.id;
         const userMessageId = Date.now();
         const loadingMessageId = userMessageId + Math.random();
 
@@ -393,27 +398,48 @@ const App: React.FC = () => {
             isLoading: true,
         };
 
-        setChatMessages(prev => [...prev, newUserMessage, loadingMessage]);
+        setChatMessagesByTopic(prev => {
+            const nextMessages = prev[topicId] ? [...prev[topicId]] : [];
+            nextMessages.push(newUserMessage, loadingMessage);
+            return {
+                ...prev,
+                [topicId]: nextMessages,
+            };
+        });
         setIsChatMaximized(true);
 
         try {
             const promptInput = await buildPromptInput(message, mode);
             const aiText = await prompt(promptInput);
-            setChatMessages(prev => prev.map(msg => (
-                msg.id === loadingMessageId
-                    ? { ...msg, text: aiText || 'AI returned an empty response.', isLoading: false }
-                    : msg
-            )));
+            setChatMessagesByTopic(prev => {
+                const existing = prev[topicId] ?? [];
+                const updated = existing.map(msg => (
+                    msg.id === loadingMessageId
+                        ? { ...msg, text: aiText || 'AI returned an empty response.', isLoading: false }
+                        : msg
+                ));
+                return {
+                    ...prev,
+                    [topicId]: updated,
+                };
+            });
         } catch (error) {
             console.error('Failed to fetch AI response:', error);
             const fallbackText = error instanceof Error && error.message
                 ? error.message
                 : 'Failed to fetch AI response. Please try again.';
-            setChatMessages(prev => prev.map(msg => (
-                msg.id === loadingMessageId
-                    ? { ...msg, text: fallbackText, isLoading: false }
-                    : msg
-            )));
+            setChatMessagesByTopic(prev => {
+                const existing = prev[topicId] ?? [];
+                const updated = existing.map(msg => (
+                    msg.id === loadingMessageId
+                        ? { ...msg, text: fallbackText, isLoading: false }
+                        : msg
+                ));
+                return {
+                    ...prev,
+                    [topicId]: updated,
+                };
+            });
         }
     };
 
@@ -479,7 +505,7 @@ const App: React.FC = () => {
                 {currentView === 'detail' && selectedTopic && (
                     <ChatContainer
                         topicName={selectedTopic.name}
-                        messages={chatMessages}
+                        messages={chatMessagesByTopic[selectedTopic.id] ?? []}
                         onSendMessage={handleSendMessage}
                         isMaximized={isChatMaximized}
                         setIsMaximized={setIsChatMaximized}
