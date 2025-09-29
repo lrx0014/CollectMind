@@ -114,14 +114,16 @@ const ChatContainer: React.FC<ChatContainerProps> = ({ topicName, messages, onSe
                                 <span />
                                 <span />
                             </div>
-                        ) : (
-                            msg.text.split(/\n/).map((line, index, arr) => (
+                        ) : (() => {
+                            const trimmedText = msg.text.replace(/\s+$/u, '');
+                            const lines = trimmedText ? trimmedText.split(/\n/) : [''];
+                            return lines.map((line, index) => (
                                 <React.Fragment key={index}>
                                     {line}
-                                    {index < arr.length - 1 && <br />}
+                                    {index < lines.length - 1 && <br />}
                                 </React.Fragment>
-                            ))
-                        )}
+                            ));
+                        })()}
                     </div>
                 ))}
                 <div ref={messagesEndRef} />
