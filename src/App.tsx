@@ -284,6 +284,98 @@ const App: React.FC = () => {
     const openSettings = () => setIsSettingsOpen(true);
     const closeSettings = () => setIsSettingsOpen(false);
 
+    const fetchActiveTabContext = async () => {
+        if (typeof chrome === 'undefined' || !chrome.tabs || !chrome.scripting) {
+            throw new Error('Active tab content is only available inside the Chrome extension environment.');
+        }
+
+        const tabs = await chrome.tabs.query({ active: true, currentWindow: true });
+        const currentTab = tabs[0];
+
+        if (!currentTab?.id) {
+            throw new Error('No active tab found. Please select a tab and try again.');
+        }
+
+        const [injectionResult] = await chrome.scripting.executeScript({
+            target: { tabId: currentTab.id },
+            func: () => {
+                const root = document.querySelector("article, main, [role='main']") || document.body;
+                root.querySelectorAll("script,style,noscript,nav,header,footer,aside,form,svg").forEach(el => el.remove());
+
+                let text = root.textContent ?? "";
+                if (root instanceof HTMLElement) {
+                    text = root.innerText || text;
+                }
+
+                return {
+                    content: text.replace(/\s+/g, " ").trim().slice(0, 120000),
+                    title: document.title,
+                    url: window.location.href,
+                };
+            },
+        });
+
+        const result = injectionResult?.result as { content?: string; title?: string; url?: string } | undefined;
+        const content = result?.content?.trim();
+
+        if (!content) {
+            throw new Error('Unable to read the active tab content. Try refreshing the page and running the query again.');
+        }
+
+        return {
+            content,
+            title: result?.title ?? currentTab.title ?? 'Untitled Page',
+            url: result?.url ?? currentTab.url ?? 'Unknown URL',
+        };
+    };
+
+    const buildPromptInput = async (message: string, mode: 'topic' | 'page'): Promise<string> => {
+        const baseInstructions = [
+            'You are CollectMind, a reference-driven assistant.',
+            'Use only the provided reference materials to answer the user.',
+            'Do not invent, speculate, or rely on outside knowledge.',
+        ].join(' ');
+
+        if (mode === 'topic') {
+            if (!selectedTopic) {
+                throw new Error('No topic selected for topic chat.');
+            }
+
+            const topicPages = (savedPages ?? [])
+                .filter(page => page.topic_id === selectedTopic.id)
+                .map((page, index) => {
+                    const summary = page.summary?.trim() || 'Summary is not available yet.';
+                    const safeTitle = page.title?.trim() || 'Untitled page';
+                    return `Document ${index + 1}\nTitle: ${safeTitle}\nURL: ${page.url}\nSummary:\n${summary}`;
+                });
+
+            const referenceMaterial = topicPages.length > 0
+                ? topicPages.join('\n\n')
+                : 'No documents available.';
+
+            return [
+                baseInstructions,
+                `The conversation is about the topic: "${selectedTopic.name}".`,
+                'Reference materials:',
+                referenceMaterial,
+                'User question:',
+                message,
+            ].join('\n\n');
+        }
+
+        const activeTab = await fetchActiveTabContext();
+        const pageReference = `Document 1\nTitle: ${activeTab.title}\nURL: ${activeTab.url}\nContent:\n${activeTab.content}`;
+
+        return [
+            baseInstructions,
+            'The conversation is about the currently open web page. Use only the provided content.',
+            'Reference materials:',
+            pageReference,
+            'User question:',
+            message,
+        ].join('\n\n');
+    };
+
     const handleSendMessage = async (message: string, mode: 'topic' | 'page') => {
         const userMessageId = Date.now();
         const loadingMessageId = userMessageId + Math.random();
@@ -304,18 +396,8 @@ const App: React.FC = () => {
         setChatMessages(prev => [...prev, newUserMessage, loadingMessage]);
         setIsChatMaximized(true);
 
-        const topicName = selectedTopic?.name ?? 'Untitled Topic';
-        const promptInput = mode === 'topic'
-            ? `You are assisting with the topic "${topicName}". Respond to the user message below.
-
-User message:
-${message}`
-            : `You are assisting with a saved page under the topic "${topicName}". Respond to the user message below.
-
-User message:
-${message}`;
-
         try {
+            const promptInput = await buildPromptInput(message, mode);
             const aiText = await prompt(promptInput);
             setChatMessages(prev => prev.map(msg => (
                 msg.id === loadingMessageId
@@ -324,9 +406,12 @@ ${message}`;
             )));
         } catch (error) {
             console.error('Failed to fetch AI response:', error);
+            const fallbackText = error instanceof Error && error.message
+                ? error.message
+                : 'Failed to fetch AI response. Please try again.';
             setChatMessages(prev => prev.map(msg => (
                 msg.id === loadingMessageId
-                    ? { ...msg, text: 'Failed to fetch AI response. Please try again.', isLoading: false }
+                    ? { ...msg, text: fallbackText, isLoading: false }
                     : msg
             )));
         }
