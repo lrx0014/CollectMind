@@ -1,0 +1,89 @@
+.summary-modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1200;
+}
+
+.summary-modal-backdrop {
+    position: absolute;
+    inset: 0;
+    background: rgba(15, 23, 42, 0.55);
+}
+
+.summary-modal-content {
+    position: relative;
+    z-index: 1;
+    width: min(640px, 92vw);
+    max-height: 80vh;
+    background: #ffffff;
+    border-radius: 18px;
+    box-shadow: 0 20px 60px rgba(15, 23, 42, 0.25);
+    display: flex;
+    flex-direction: column;
+}
+
+.summary-modal-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 20px 24px 16px 24px;
+    border-bottom: 1px solid rgba(0,0,0,0.08);
+}
+
+.summary-modal-title {
+    margin: 0;
+    font-size: 20px;
+    font-weight: 600;
+    color: #111827;
+    line-height: 1.3;
+}
+
+.summary-modal-close {
+    background: none;
+    border: none;
+    font-size: 28px;
+    color: #4B5563;
+    cursor: pointer;
+    line-height: 1;
+    padding: 4px 8px;
+}
+
+.summary-modal-close:hover {
+    color: #111827;
+}
+
+.summary-modal-body {
+    padding: 20px 24px 28px 24px;
+    overflow-y: auto;
+    font-size: 15px;
+    line-height: 1.7;
+    color: #374151;
+}
+
+.summary-modal-body p {
+    margin: 0 0 12px 0;
+}
+
+.summary-modal-body p:last-child {
+    margin-bottom: 0;
+}
+
+.summary-modal-body strong {
+    font-weight: 600;
+}
+
+.summary-modal-body a {
+    color: #2563EB;
+    text-decoration: underline;
+}
+
+.summary-modal-body ul,
+.summary-modal-body ol {
+    margin: 0 0 12px 20px;
+}

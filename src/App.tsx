@@ -14,6 +14,7 @@ import {type ChatMessage} from "./components/chat_container.tsx";
 import ChatContainer from "./components/chat_container.tsx";
 import {prompt} from "./libs/prompt.ts";
 import SettingsOverlay from "./components/settings_overlay.tsx";
+import SummaryModal from "./components/summary_modal.tsx";
 
 // --- Main App Component ---
 const App: React.FC = () => {
@@ -37,6 +38,9 @@ const App: React.FC = () => {
     const [isPageSearchActive, setIsPageSearchActive] = useState(false);
     const [pageSearchQuery, setPageSearchQuery] = useState("");
     const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+    const [summaryModalOpen, setSummaryModalOpen] = useState(false);
+    const [summaryModalTitle, setSummaryModalTitle] = useState("");
+    const [summaryModalContent, setSummaryModalContent] = useState("");
 
     const openConfirm = (
         title: string,
@@ -299,6 +303,22 @@ const App: React.FC = () => {
             chrome.tabs.create({ url: page.url }).catch(error => console.error("Error creating tab:", error));
         } else {
             window.open(page.url, '_blank');
+        }
+    };
+
+    const handleViewSummary = async (page: SavedPage) => {
+        setSummaryModalTitle(page.title);
+        setSummaryModalContent('Loading summary...');
+        setSummaryModalOpen(true);
+
+        try {
+            const fresh = await db.saved_pages.get(page.id);
+            const summary = fresh?.summary ?? page.summary ?? '';
+            setSummaryModalContent(summary || 'No summary available yet.');
+        } catch (error) {
+            console.error('Failed to load summary:', error);
+            setSummaryModalContent('Failed to load summary. Please try again.');
+            showToast('Failed to load summary.');
         }
     };
 
@@ -580,6 +600,7 @@ const App: React.FC = () => {
                                                 page={page}
                                                 onClick={() => handlePageCardClick(page)}
                                                 onDelete={() => handleDeleteSavedPage(page.id, page.title)}
+                                                onViewSummary={() => handleViewSummary(page)}
                                             />
                                         ))
                                     }
@@ -641,6 +662,13 @@ const App: React.FC = () => {
                 onClose={closeSettings}
                 appName="CollectMind"
                 version="0.1.0"
+            />
+
+            <SummaryModal
+                open={summaryModalOpen}
+                title={summaryModalTitle}
+                content={summaryModalContent}
+                onClose={() => setSummaryModalOpen(false)}
             />
         </>
     );

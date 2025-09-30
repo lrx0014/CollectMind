@@ -6,10 +6,11 @@ import "../styles/saved_page.css";
 interface SavedPageCardProps {
     page: SavedPage,
     onDelete: () => void,
-    onClick?: () => void
+    onClick?: () => void,
+    onViewSummary: () => void,
 }
 
-const SavedPageCard: React.FC<SavedPageCardProps> = ({page, onDelete, onClick}) => {
+const SavedPageCard: React.FC<SavedPageCardProps> = ({page, onDelete, onClick, onViewSummary}) => {
     const handleImageError = (e: React.SyntheticEvent<HTMLImageElement, Event>) => {
         e.currentTarget.style.display = 'none'; // Hide broken image icon
         e.currentTarget.parentElement?.classList.add('no-image'); // Add class to show fallback
@@ -40,6 +41,7 @@ const SavedPageCard: React.FC<SavedPageCardProps> = ({page, onDelete, onClick}) 
             <div className="card-actions">
                 <button className="action-button" title="View Summary" onClick={(e) => {
                     e.stopPropagation(); /* view summary */
+                    onViewSummary();
                 }}>
                     <Fullscreen size={16}/>
                 </button>
