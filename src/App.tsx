@@ -566,16 +566,26 @@ const App: React.FC = () => {
                                     onSettingsClick={openSettings}
                                 />
                                 <div className="content-area">
-                                    {visibleTopics.map((topic) => (
-                                        <TopicCard
-                                            key={topic.id}
-                                            topic={topic}
-                                            pageCount={pageCountByTopic[topic.id] ?? 0}
-                                            onClick={() => handleCardClick(topic)}
-                                            onEdit={() => openEditTopic(topic)}
-                                            onDelete={() => handleDeleteTopic(topic)}
-                                        />
-                                    ))}
+                                    {visibleTopics.length === 0 ? (
+                                        <div className="empty-state">
+                                            <img src="/images/icon_origin.png" alt="CollectMind logo" />
+                                            <h2 className="empty-state-title">Start Your AI Journey</h2>
+                                            <p className="empty-state-description">
+                                                Create your first topic to begin organizing insights with CollectMind.
+                                            </p>
+                                        </div>
+                                    ) : (
+                                        visibleTopics.map((topic) => (
+                                            <TopicCard
+                                                key={topic.id}
+                                                topic={topic}
+                                                pageCount={pageCountByTopic[topic.id] ?? 0}
+                                                onClick={() => handleCardClick(topic)}
+                                                onEdit={() => openEditTopic(topic)}
+                                                onDelete={() => handleDeleteTopic(topic)}
+                                            />
+                                        ))
+                                    )}
                                 </div>
                             </>
                         )
@@ -594,16 +604,25 @@ const App: React.FC = () => {
                             />
                             <div className="detail-view-container">
                                 <div className="content-area">
-                                    {visiblePages.map(page => (
-                                            <SavedPageCard
-                                                key={page.id}
-                                                page={page}
-                                                onClick={() => handlePageCardClick(page)}
-                                                onDelete={() => handleDeleteSavedPage(page.id, page.title)}
-                                                onViewSummary={() => handleViewSummary(page)}
-                                            />
-                                        ))
-                                    }
+                                    {visiblePages.length === 0 ? (
+                                        <div className="empty-state">
+                                            <img src="/images/icon_origin.png" alt="CollectMind logo" />
+                                            <h2 className="empty-state-title">Nothing Saved Yet</h2>
+                                            <p className="empty-state-description">
+                                                Add a page to this topic to capture key takeaways and summaries.
+                                            </p>
+                                        </div>
+                                    ) : (
+                                        visiblePages.map(page => (
+                                                <SavedPageCard
+                                                    key={page.id}
+                                                    page={page}
+                                                    onClick={() => handlePageCardClick(page)}
+                                                    onDelete={() => handleDeleteSavedPage(page.id, page.title)}
+                                                    onViewSummary={() => handleViewSummary(page)}
+                                                />
+                                            ))
+                                    )}
                                 </div>
                             </div>
                         </>

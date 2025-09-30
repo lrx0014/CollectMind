@@ -35,7 +35,7 @@ const SettingsOverlay: React.FC<SettingsOverlayProps> = ({ open, onClose, appNam
                 <button className="settings-close" onClick={onClose} aria-label="Close settings">&times;</button>
                 <img
                     className="settings-logo"
-                    src="/images/icon128.png"
+                    src="/images/icon_origin.png"
                     alt={`${appName} logo`}
                     width={96}
                     height={96}
