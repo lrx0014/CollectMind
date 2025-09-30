@@ -77,6 +77,11 @@ const App: React.FC = () => {
         [selectedTopic?.id],
     );
 
+    const allSavedPages = useLiveQuery<SavedPage[]>(
+        () => db.getAllSavedPages(),
+        [],
+    );
+
     const chatMessagesFromDb = useLiveQuery<ChatMessageRecord[]>(
         () => db.getAllChatMessages(),
         [],
@@ -104,6 +109,14 @@ const App: React.FC = () => {
         const pending = pendingAiMessages[topicId] ?? [];
         return [...persisted, ...pending];
     }, [selectedTopic?.id, persistedChatMessagesByTopic, pendingAiMessages]);
+
+    const pageCountByTopic = useMemo<Record<number, number>>(() => {
+        const counts: Record<number, number> = {};
+        for (const page of allSavedPages ?? []) {
+            counts[page.topic_id] = (counts[page.topic_id] ?? 0) + 1;
+        }
+        return counts;
+    }, [allSavedPages]);
 
     const normalizedTopicQuery = topicSearchQuery.trim().toLowerCase();
     const visibleTopics = (topics ?? []).filter(topic => {
@@ -537,6 +550,7 @@ const App: React.FC = () => {
                                         <TopicCard
                                             key={topic.id}
                                             topic={topic}
+                                            pageCount={pageCountByTopic[topic.id] ?? 0}
                                             onClick={() => handleCardClick(topic)}
                                             onEdit={() => openEditTopic(topic)}
                                             onDelete={() => handleDeleteTopic(topic)}

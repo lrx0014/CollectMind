@@ -7,18 +7,21 @@ import {Pencil, Trash2} from "lucide-react";
 // --- TopicCard Prop Types ---
 interface TopicCardProps {
     topic: Topic;
+    pageCount: number;
     onClick: () => void;
     onDelete: () => void;
     onEdit: () => void;
 }
 
-const TopicCard: React.FC<TopicCardProps> = ({topic, onClick, onDelete, onEdit}) => {
+const TopicCard: React.FC<TopicCardProps> = ({topic, pageCount, onClick, onDelete, onEdit}) => {
+    const itemLabel = pageCount === 1 ? '1 item' : `${pageCount} items`;
+
     return (
         <div className="topic-card-new" onClick={onClick} title={topic.name}>
             <div className="color-tag" style={{backgroundColor: topic.color_tag_rgb}}></div>
             <div className="card-content">
                 <h3 className="card-title-new">{topic.name}</h3>
-                <p className="card-summary">{topic.summary}</p>
+                <p className="card-summary">{itemLabel}</p>
             </div>
             <div className="card-actions">
                 <button className="action-button" onClick={(e) => {
@@ -39,4 +42,3 @@ const TopicCard: React.FC<TopicCardProps> = ({topic, onClick, onDelete, onEdit})
 };
 
 export default TopicCard;
-
