@@ -24,13 +24,13 @@ const TopicCard: React.FC<TopicCardProps> = ({topic, pageCount, onClick, onDelet
                 <p className="card-summary">{itemLabel}</p>
             </div>
             <div className="card-actions">
-                <button className="action-button" onClick={(e) => {
+                <button className="action-button" title='Edit Topic' onClick={(e) => {
                     e.stopPropagation(); /* Edit */
                     onEdit();
                 }}>
                     <Pencil size={16}/>
                 </button>
-                <button className="action-button" onClick={(e) => {
+                <button className="action-button" title='Delete Topic' onClick={(e) => {
                     e.stopPropagation(); /* Delete */
                     onDelete();
                 }}>

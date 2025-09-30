@@ -1,5 +1,5 @@
 import React from "react";
-import {Globe, Trash2} from "lucide-react";
+import {Globe, Trash2, Fullscreen} from "lucide-react";
 import type {SavedPage} from "../libs/db.ts";
 import "../styles/saved_page.css";
 
@@ -38,7 +38,12 @@ const SavedPageCard: React.FC<SavedPageCardProps> = ({page, onDelete, onClick}) 
                 <p className="page-summary">{cleanedSummary}</p>
             </div>
             <div className="card-actions">
-                <button className="action-button" onClick={(e) => {
+                <button className="action-button" title="View Summary" onClick={(e) => {
+                    e.stopPropagation(); /* view summary */
+                }}>
+                    <Fullscreen size={16}/>
+                </button>
+                <button className="action-button" title="Delete" onClick={(e) => {
                     e.stopPropagation(); /* Delete */
                     onDelete();
                 }}>
