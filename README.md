@@ -24,46 +24,46 @@ CollectMind is an AI-powered Bookmark Collection which helps you build your own 
 ## 3. Screenshots
 
 <figure style="display:inline-block; text-align:center; margin: 10px;">
-  <img src="./docs/images/1.png" width="200">
   <figcaption> 1. Start-Page </figcaption>
+  <img src="./docs/images/1.png" width="200">
 </figure>
 
 <figure style="display:inline-block; text-align:center; margin: 10px;">
-  <img src="./docs/images/2.png" width="200">
   <figcaption> 2. Create a Topic </figcaption>
+  <img src="./docs/images/2.png" width="200">
 </figure>
 
 <figure style="display:inline-block; text-align:center; margin: 10px;">
-  <img src="./docs/images/3.png" width="200">
   <figcaption> 3. Topic List </figcaption>
+  <img src="./docs/images/3.png" width="200">
 </figure>
 
 <figure style="display:inline-block; text-align:center; margin: 10px;">
-  <img src="./docs/images/4.png" width="200">
   <figcaption> 4. Saved Pages List </figcaption>
+  <img src="./docs/images/4.png" width="200">
 </figure>
 
 <figure style="display:inline-block; text-align:center; margin: 10px;">
-  <img src="./docs/images/5.png" width="400">
   <figcaption> 5. Page Summary (ai) </figcaption>
+  <img src="./docs/images/5.png" width="400">
 </figure>
 
 <figure style="display:inline-block; text-align:center; margin: 10px;">
-  <img src="./docs/images/6.png" width="400">
   <figcaption> 6. Summary Details </figcaption>
+  <img src="./docs/images/6.png" width="400">
 </figure>
 
 <figure style="display:inline-block; text-align:center; margin: 10px;">
-  <img src="./docs/images/7.png" width="200">
   <figcaption> 7. AI chat based on topics </figcaption>
+  <img src="./docs/images/7.png" width="200">
 </figure>
 
 <figure style="display:inline-block; text-align:center; margin: 10px;">
-  <img src="./docs/images/8.png" width="400">
   <figcaption> 8. AI chat based on a specific webpage </figcaption>
+  <img src="./docs/images/8.png" width="400">
 </figure>
 
 <figure style="display:inline-block; text-align:center; margin: 10px;">
-  <img src="./docs/images/9.png" width="200">
   <figcaption> 9. Settings </figcaption>
+  <img src="./docs/images/9.png" width="200">
 </figure>
