@@ -38,6 +38,10 @@ export async function getSummarizerAvailability(): Promise<SummarizerAvailabilit
         return "unsupported";
     }
 
+    return readSummarizerAvailability();
+}
+
+async function readSummarizerAvailability(): Promise<SummarizerAvailabilityStatus> {
     try {
         const status = await Summarizer.availability();
         return typeof status === "string" && status.trim() ? status : "unknown";
@@ -47,6 +51,17 @@ export async function getSummarizerAvailability(): Promise<SummarizerAvailabilit
     }
 }
 
+function assertUserActivation(): void {
+    try {
+        if (typeof navigator === "undefined") return;
+        const activation = (navigator as any).userActivation;
+        if (activation && activation.isActive === false) {
+            throw new Error("Summarizer model creation requires a recent user gesture.");
+        }
+    } catch (_err) {
+        // Ignore environments without navigator/userActivation support.
+    }
+}
 export async function ensureSummarizerReady(opts?: {
     type?: SummaryType;
     format?: SummaryFormat;
@@ -55,23 +70,16 @@ export async function ensureSummarizerReady(opts?: {
     onDownloadProgress?: (ratio: number) => void;
     forceWarmup?: boolean;
 }) {
-    if (typeof Summarizer === "undefined") {
-        throw new Error("Summarizer API unsupported.");
-    }
-
-    const warmupOptions: SummarizeOptions = {
+    const summarizer = await getSummarizer({
         text: "",
         type: opts?.type,
         format: opts?.format,
         length: opts?.length,
         sharedContext: opts?.sharedContext,
         onDownloadProgress: opts?.onDownloadProgress,
-    };
+    });
 
-    const summarizer = await getSummarizer(warmupOptions);
-
-    const availability = await getSummarizerAvailability();
-    if (availability === "available" && !opts?.forceWarmup) {
+    if (!opts?.forceWarmup) {
         return summarizer;
     }
 
@@ -85,7 +93,9 @@ export async function ensureSummarizerReady(opts?: {
     return summarizer;
 }
 
-const cache = new Map<string, any>();
+type SummarizerInstance = Awaited<ReturnType<typeof Summarizer.create>>;
+
+const cache = new Map<string, Promise<SummarizerInstance>>();
 const def = { type: "key-points" as SummaryType, format: "plain-text" as SummaryFormat, length: "long" as SummaryLength };
 const MAX_REDUCE_DEPTH = 4;
 const DEFAULT_CHUNK_SIZE = 8_000;
@@ -94,26 +104,64 @@ function key(t: SummaryType, f: SummaryFormat, l: SummaryLength, s?: string) {
     return `${t}|${f}|${l}|${s ?? ""}`;
 }
 
-async function getSummarizer(opts: SummarizeOptions) {
-    if (typeof Summarizer === "undefined") throw new Error("Summarizer API unsupported.");
-    const k = key(opts.type ?? def.type, opts.format ?? def.format, opts.length ?? def.length, opts.sharedContext);
-    if (cache.has(k)) return cache.get(k);
+async function createSummarizer(opts: SummarizeOptions): Promise<SummarizerInstance> {
+    if (typeof Summarizer === "undefined") {
+        throw new Error("Summarizer API unsupported.");
+    }
 
-    const s = await Summarizer.create({
+    const availability = await readSummarizerAvailability();
+    console.log("[Summarizer] Availability:", availability);
+    if (availability === "unavailable") {
+        throw new Error("Summarizer API is unavailable on this device.");
+    }
+    if (availability !== "available" && availability !== "downloadable") {
+        throw new Error(`Summarizer API not ready (status: ${availability}).`);
+    }
+
+    assertUserActivation();
+
+    return Summarizer.create({
         type: opts.type ?? def.type,
         format: opts.format ?? def.format,
         length: opts.length ?? def.length,
         sharedContext: opts.sharedContext,
         monitor(m) {
             m.addEventListener("downloadprogress", (e: any) => {
-                const value = Number(e?.loaded ?? 0);
-                const ratio = Number.isFinite(value) ? value : 0;
+                const loaded = Number(e?.loaded);
+                if (!Number.isFinite(loaded)) {
+                    console.log("[Summarizer] downloadprogress event", e);
+                    return;
+                }
+
+                let ratio = loaded;
+                if (ratio > 1) {
+                    ratio = ratio <= 100 ? ratio / 100 : 1;
+                }
+                ratio = Math.max(0, Math.min(1, ratio));
+
+                console.log(`Downloaded ${loaded * 100}%`);
                 opts.onDownloadProgress?.(ratio);
             });
         },
     });
-    cache.set(k, s);
-    return s;
+}
+
+async function getSummarizer(opts: SummarizeOptions) {
+    if (typeof Summarizer === "undefined") throw new Error("Summarizer API unsupported.");
+    const k = key(opts.type ?? def.type, opts.format ?? def.format, opts.length ?? def.length, opts.sharedContext);
+    const cached = cache.get(k);
+    if (cached) return cached;
+
+    const creation = createSummarizer(opts).catch((error) => {
+        cache.delete(k);
+        throw error;
+    });
+
+    const availability = await Summarizer.availability();
+    console.log("[Summarizer] Availability:", availability);
+
+    cache.set(k, creation);
+    return creation;
 }
 
 function normalizeText(text: string) {
@@ -323,7 +371,9 @@ async function summarizeWithChunking(
 }
 
 export async function summarize(opts: SummarizeOptions): Promise<string> {
-    console.log(`Summarizer ${await Summarizer.availability()}`);
+    if (typeof Summarizer !== "undefined") {
+        console.log("[Summarizer] Availability check during summarize:", await readSummarizerAvailability());
+    }
     const cleaned = normalizeText(opts.text);
     if (!cleaned) return "";
     const summarizer = await getSummarizer(opts);

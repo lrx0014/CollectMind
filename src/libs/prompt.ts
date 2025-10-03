@@ -8,15 +8,7 @@ function getLM(): any {
     return LM;
 }
 
-export async function getPromptAvailability(): Promise<SummarizerAvailabilityStatus> {
-    let LM: any;
-    try {
-        LM = getLM();
-    } catch (error) {
-        console.warn("[Prompt] LanguageModel API not available.", error);
-        return "unsupported";
-    }
-
+async function readAvailability(LM: any): Promise<SummarizerAvailabilityStatus> {
     try {
         const availability = await LM.availability?.();
         return typeof availability === "string" && availability.trim() ? availability : "unknown";
@@ -26,30 +18,103 @@ export async function getPromptAvailability(): Promise<SummarizerAvailabilitySta
     }
 }
 
-async function ensureSession(opts?: { onDownloadProgress?: (ratio: number) => void }): Promise<any> {
-    if (_sessionPromise) return _sessionPromise;
+function extractProgressRatio(event: any): number | null {
+    const candidates = [
+        event?.loaded,
+        event?.progress,
+        event?.detail?.loaded,
+        event?.detail?.progress,
+        event?.target?.loaded,
+        event?.target?.progress,
+        event?.currentTarget?.loaded,
+        event?.currentTarget?.progress,
+    ];
 
+    const raw = candidates.find((value) => typeof value === "number" && Number.isFinite(value));
+    if (typeof raw !== "number" || !Number.isFinite(raw)) {
+        return null;
+    }
+
+    const totalCandidates = [
+        event?.total,
+        event?.detail?.total,
+        event?.target?.total,
+        event?.currentTarget?.total,
+    ];
+
+    const total = totalCandidates.find((value) => typeof value === "number" && Number.isFinite(value) && value > 0);
+
+    let ratio = raw;
+    if (typeof total === "number" && total > 0 && raw > 1) {
+        ratio = raw / total;
+    } else if (raw > 1) {
+        ratio = raw <= 100 ? raw / 100 : 1;
+    }
+
+    return Math.max(0, Math.min(1, ratio));
+}
+
+function assertUserActivation(): void {
+    try {
+        if (typeof navigator === "undefined") return;
+        const activation = (navigator as any).userActivation;
+        if (activation && activation.isActive === false) {
+            throw new Error("Prompt model creation requires a recent user gesture.");
+        }
+    } catch (_err) {
+        // Ignore environments without navigator/userActivation support.
+    }
+}
+
+export async function getPromptAvailability(): Promise<SummarizerAvailabilityStatus> {
+    let LM: any;
+    try {
+        LM = getLM();
+    } catch (error) {
+        console.warn("[Prompt] LanguageModel API not available.", error);
+        return "unsupported";
+    }
+
+    return readAvailability(LM);
+}
+
+async function createSession(opts?: { onDownloadProgress?: (ratio: number) => void }): Promise<any> {
     const LM = getLM();
-    const availability = await LM.availability?.();
 
+    assertUserActivation();
+
+    const availability = await readAvailability(LM);
     console.log("[Prompt] LanguageModel availability:", availability);
-
     if (availability === "unavailable") {
         throw new Error("Prompt API is unavailable on this device.");
     }
 
-    _sessionPromise = LM.create({
+    return LM.create({
         monitor(m: EventTarget) {
             m.addEventListener("downloadprogress", (e: any) => {
-                const value = Number(e?.loaded ?? 0);
-                const ratio = Number.isFinite(value) ? value : 0;
-                console.log(`[Prompt] model download: ${ratio * 100}%`);
-                opts?.onDownloadProgress?.(ratio);
+                const ratio = extractProgressRatio(e);
+                if (ratio != null) {
+                    console.log(`Downloaded ${Math.round(ratio * 100)}%`);
+                    opts?.onDownloadProgress?.(ratio);
+                } else {
+                    console.log("[Prompt] downloadprogress event", e);
+                }
             });
         },
     });
+}
 
-    return _sessionPromise;
+async function ensureSession(opts?: { onDownloadProgress?: (ratio: number) => void }): Promise<any> {
+    if (_sessionPromise) return _sessionPromise;
+
+    _sessionPromise = createSession(opts);
+
+    try {
+        return await _sessionPromise;
+    } catch (error) {
+        _sessionPromise = null;
+        throw error;
+    }
 }
 
 export async function prompt(text: string): Promise<string> {
