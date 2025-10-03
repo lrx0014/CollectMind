@@ -1,69 +1,69 @@
-# React + TypeScript + Vite
+# CollectMind
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+<div style="text-align: center">
+<img src="./docs/images/icon_origin.png"/>
+</div>
 
-Currently, two official plugins are available:
+CollectMind is an AI-powered Bookmark Collection which helps you build your own knowledge base.
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+## 1. Main Features
+* Manage your bookmarks by topic 
+* Bookmark the current webpage
+* Automatically summarize webpage content
+* AI chat based on topics 
+* AI chat based on a specific webpage
+* Backup and restore
 
-## Expanding the ESLint configuration
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+## 2. How to build & run
+1. clone this repo
+2. ```nvm run build```
+3. Load ```/dict``` directory in Chrome as an unpacked extension.
+4. Click the extension's icon to open CollectMind.
 
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
+## 3. Screenshots
 
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
+<figure style="display:inline-block; text-align:center; margin: 10px;">
+  <img src="./docs/images/1.png" width="200">
+  <figcaption> 1. Start-Page </figcaption>
+</figure>
 
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
-```
+<figure style="display:inline-block; text-align:center; margin: 10px;">
+  <img src="./docs/images/2.png" width="200">
+  <figcaption> 2. Create a Topic </figcaption>
+</figure>
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+<figure style="display:inline-block; text-align:center; margin: 10px;">
+  <img src="./docs/images/3.png" width="200">
+  <figcaption> 3. Topic List </figcaption>
+</figure>
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+<figure style="display:inline-block; text-align:center; margin: 10px;">
+  <img src="./docs/images/4.png" width="200">
+  <figcaption> 4. Saved Pages List </figcaption>
+</figure>
 
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
-```
+<figure style="display:inline-block; text-align:center; margin: 10px;">
+  <img src="./docs/images/5.png" width="400">
+  <figcaption> 5. Page Summary (ai) </figcaption>
+</figure>
+
+<figure style="display:inline-block; text-align:center; margin: 10px;">
+  <img src="./docs/images/6.png" width="400">
+  <figcaption> 6. Summary Details </figcaption>
+</figure>
+
+<figure style="display:inline-block; text-align:center; margin: 10px;">
+  <img src="./docs/images/7.png" width="200">
+  <figcaption> 7. AI chat based on topics </figcaption>
+</figure>
+
+<figure style="display:inline-block; text-align:center; margin: 10px;">
+  <img src="./docs/images/8.png" width="400">
+  <figcaption> 8. AI chat based on a specific webpage </figcaption>
+</figure>
+
+<figure style="display:inline-block; text-align:center; margin: 10px;">
+  <img src="./docs/images/9.png" width="200">
+  <figcaption> 9. Settings </figcaption>
+</figure>
