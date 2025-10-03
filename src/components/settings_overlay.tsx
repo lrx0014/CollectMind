@@ -1,6 +1,7 @@
-import React, {useEffect, useMemo, useState} from "react";
+import React, {useEffect, useMemo, useRef, useState} from "react";
 import {ensureSummarizerReady, getSummarizerAvailability, type SummarizerAvailabilityStatus} from "../libs/summarizer.ts";
 import {ensurePromptReady, getPromptAvailability} from "../libs/prompt.ts";
+import {createBackupArchive, downloadBackupArchive, restoreBackupFromFile} from "../libs/backup.ts";
 import "../styles/settings_overlay.css";
 
 interface SettingsOverlayProps {
@@ -34,6 +35,13 @@ const SettingsOverlay: React.FC<SettingsOverlayProps> = ({ open, onClose, appNam
     const [isPromptDownloading, setIsPromptDownloading] = useState(false);
     const [promptDownloadProgress, setPromptDownloadProgress] = useState<number | null>(null);
     const [promptStatusError, setPromptStatusError] = useState<string | null>(null);
+
+    const [isBackupExporting, setIsBackupExporting] = useState(false);
+    const [backupExportError, setBackupExportError] = useState<string | null>(null);
+    const [isBackupRestoring, setIsBackupRestoring] = useState(false);
+    const [backupRestoreError, setBackupRestoreError] = useState<string | null>(null);
+    const [backupInfoMessage, setBackupInfoMessage] = useState<string | null>(null);
+    const backupFileInputRef = useRef<HTMLInputElement | null>(null);
 
     const normalizedSummarizerAvailability = useMemo(
         () => (summarizerAvailability ?? "unknown").toString().toLowerCase(),
@@ -240,12 +248,70 @@ const SettingsOverlay: React.FC<SettingsOverlayProps> = ({ open, onClose, appNam
         }
     };
 
-    const handleBackupExport = () => {
-        console.log("[Settings] Backup export triggered.");
+    const handleBackupExport = async () => {
+        if (isBackupExporting) {
+            return;
+        }
+
+        setIsBackupExporting(true);
+        setBackupExportError(null);
+        setBackupRestoreError(null);
+        setBackupInfoMessage(null);
+
+        try {
+            const archive = await createBackupArchive(version);
+            downloadBackupArchive(archive);
+            setBackupInfoMessage(
+                `Backup created ${new Date(archive.manifest.createdAt).toLocaleString()} with ${archive.manifest.tables.topics.rows} active topics.`
+            );
+        } catch (error) {
+            console.error("[Settings] Backup export failed.", error);
+            setBackupExportError(error instanceof Error ? error.message : String(error));
+            setBackupInfoMessage(null);
+        } finally {
+            setIsBackupExporting(false);
+        }
     };
 
-    const handleBackupRestore = () => {
-        console.log("[Settings] Backup restore triggered.");
+    const handleBackupRestoreRequest = () => {
+        backupFileInputRef.current?.click();
+    };
+
+    const handleBackupFileChange: React.ChangeEventHandler<HTMLInputElement> = async (event) => {
+        const file = event.target.files?.[0];
+        event.target.value = "";
+
+        if (!file) {
+            return;
+        }
+
+        const confirmed = window.confirm(
+            "Restoring a backup will delete all current topics, saved pages, and chat history, then replace them with the backup contents.\n\nThis action cannot be undone. Do you want to continue?"
+        );
+
+        if (!confirmed) {
+            setBackupInfoMessage("Restore cancelled.");
+            setBackupRestoreError(null);
+            return;
+        }
+
+        setIsBackupRestoring(true);
+        setBackupRestoreError(null);
+        setBackupInfoMessage(null);
+
+        try {
+            const summary = await restoreBackupFromFile(file);
+            const { topics, saved_pages, chat_messages } = summary.restored;
+            setBackupInfoMessage(
+                `Restore complete: ${topics} topics, ${saved_pages} saved pages, ${chat_messages} chat messages.`
+            );
+        } catch (error) {
+            console.error("[Settings] Backup restore failed.", error);
+            setBackupRestoreError(error instanceof Error ? error.message : String(error));
+            setBackupInfoMessage(null);
+        } finally {
+            setIsBackupRestoring(false);
+        }
     };
 
     const showSummarizerDownloadButton = useMemo(() => {
@@ -406,21 +472,42 @@ const SettingsOverlay: React.FC<SettingsOverlayProps> = ({ open, onClose, appNam
                                 type="button"
                                 className="setting-action"
                                 onClick={handleBackupExport}
+                                disabled={isBackupExporting || isBackupRestoring}
                             >
-                                Export backup
+                                {isBackupExporting ? "Preparing…" : "Export backup"}
                             </button>
                             <button
                                 type="button"
                                 className="setting-action setting-action--ghost"
-                                onClick={handleBackupRestore}
+                                onClick={handleBackupRestoreRequest}
+                                disabled={isBackupRestoring || isBackupExporting}
                             >
-                                Restore from file
+                                {isBackupRestoring ? "Restoring…" : "Restore from file"}
                             </button>
+                            <input
+                                ref={backupFileInputRef}
+                                type="file"
+                                accept=".collectmind.backup.zip,application/zip,.zip"
+                                style={{ display: "none" }}
+                                onChange={handleBackupFileChange}
+                            />
                         </div>
 
                         <p className="setting-hint">
                             Restoring replaces your current data with the backup you choose.
                         </p>
+
+                        {backupExportError && (
+                            <p className="setting-error" role="alert">{backupExportError}</p>
+                        )}
+
+                        {backupRestoreError && (
+                            <p className="setting-error" role="alert">{backupRestoreError}</p>
+                        )}
+
+                        {backupInfoMessage && !backupRestoreError && (
+                            <p className="setting-success" role="status">{backupInfoMessage}</p>
+                        )}
                     </div>
                 </div>
             </div>
