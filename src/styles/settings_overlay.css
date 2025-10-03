@@ -63,5 +63,180 @@
 .settings-version {
     margin-top: 8px;
     font-size: 16px;
+    color: #6b7280;
+}
+
+.settings-divider {
+    width: 100%;
+    height: 1px;
+    margin: 28px 0 24px;
+    background: linear-gradient(90deg, rgba(148, 163, 184, 0), rgba(148, 163, 184, 0.6), rgba(148, 163, 184, 0));
+}
+
+.settings-panel {
+    margin-top: 0;
+    text-align: left;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.settings-panel-header {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.settings-panel-title {
+    margin: 0;
+    font-size: 20px;
+    font-weight: 600;
+    color: #111827;
+}
+
+.settings-panel-subtitle {
+    margin: 0;
+    font-size: 14px;
+    color: #6b7280;
+}
+
+.setting-card {
+    background: linear-gradient(135deg, rgba(248, 250, 252, 0.9), rgba(241, 245, 249, 0.88));
+    border: 1px solid rgba(148, 163, 184, 0.25);
+    border-radius: 18px;
+    padding: 18px 20px 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.4);
+}
+
+.setting-card-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 16px;
+}
+
+.setting-card-copy {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.setting-card-label {
+    font-size: 16px;
+    font-weight: 600;
+    color: #111827;
+}
+
+.setting-card-description {
+    font-size: 13px;
+    color: #6b7280;
+    line-height: 1.45;
+}
+
+.setting-status {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 102px;
+    padding: 6px 12px;
+    border-radius: 999px;
+    font-size: 13px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+.setting-status--success {
+    background: rgba(16, 185, 129, 0.12);
+    color: #047857;
+}
+
+.setting-status--warning {
+    background: rgba(251, 191, 36, 0.15);
+    color: #b45309;
+}
+
+.setting-status--danger {
+    background: rgba(248, 113, 113, 0.15);
+    color: #b91c1c;
+}
+
+.setting-status--neutral {
+    background: rgba(148, 163, 184, 0.2);
+    color: #334155;
+}
+
+.setting-status--pending {
+    background: rgba(59, 130, 246, 0.15);
+    color: #1d4ed8;
+}
+
+.setting-progress {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.setting-progress-track {
+    flex: 1;
+    height: 6px;
+    background: rgba(203, 213, 225, 0.8);
+    border-radius: 999px;
+    overflow: hidden;
+}
+
+.setting-progress-bar {
+    height: 100%;
+    background: linear-gradient(90deg, #3b82f6, #2563eb);
+    width: 0;
+    border-radius: 999px;
+    transition: width 0.25s ease;
+}
+
+.setting-progress-value {
+    font-size: 13px;
     color: #4b5563;
+    min-width: 48px;
+    text-align: right;
+}
+
+.setting-error {
+    margin: 0;
+    font-size: 13px;
+    color: #b91c1c;
+}
+
+.setting-action {
+    align-self: center;
+    background: linear-gradient(135deg, #2563eb, #1d4ed8);
+    color: #f8fafc;
+    border: none;
+    border-radius: 999px;
+    padding: 10px 18px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    box-shadow: 0 10px 20px rgba(37, 99, 235, 0.25);
+    transition: transform 0.18s ease, box-shadow 0.18s ease;
+}
+
+.setting-action:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 12px 24px rgba(37, 99, 235, 0.3);
+}
+
+.setting-action:active {
+    transform: translateY(0);
+    box-shadow: 0 6px 12px rgba(37, 99, 235, 0.35);
+}
+
+.setting-action:disabled,
+.setting-action[disabled] {
+    cursor: not-allowed;
+    opacity: 0.7;
+    box-shadow: none;
 }

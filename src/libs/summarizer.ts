@@ -24,6 +24,67 @@ export interface SummarizeOptions {
     maxChars?: number;
 }
 
+export type SummarizerAvailabilityStatus =
+    | "available"
+    | "downloadable"
+    | "unavailable"
+    | "unsupported"
+    | "error"
+    | "unknown"
+    | string;
+
+export async function getSummarizerAvailability(): Promise<SummarizerAvailabilityStatus> {
+    if (typeof Summarizer === "undefined") {
+        return "unsupported";
+    }
+
+    try {
+        const status = await Summarizer.availability();
+        return typeof status === "string" && status.trim() ? status : "unknown";
+    } catch (error) {
+        console.warn("[Summarizer] Failed to read availability.", error);
+        return "error";
+    }
+}
+
+export async function ensureSummarizerReady(opts?: {
+    type?: SummaryType;
+    format?: SummaryFormat;
+    length?: SummaryLength;
+    sharedContext?: string;
+    onDownloadProgress?: (ratio: number) => void;
+    forceWarmup?: boolean;
+}) {
+    if (typeof Summarizer === "undefined") {
+        throw new Error("Summarizer API unsupported.");
+    }
+
+    const warmupOptions: SummarizeOptions = {
+        text: "",
+        type: opts?.type,
+        format: opts?.format,
+        length: opts?.length,
+        sharedContext: opts?.sharedContext,
+        onDownloadProgress: opts?.onDownloadProgress,
+    };
+
+    const summarizer = await getSummarizer(warmupOptions);
+
+    const availability = await getSummarizerAvailability();
+    if (availability === "available" && !opts?.forceWarmup) {
+        return summarizer;
+    }
+
+    try {
+        await summarizer.summarize("Warm up the on-device summarizer model.");
+    } catch (error) {
+        console.warn("[Summarizer] Warmup summarize call failed.", error);
+        throw error;
+    }
+
+    return summarizer;
+}
+
 const cache = new Map<string, any>();
 const def = { type: "key-points" as SummaryType, format: "plain-text" as SummaryFormat, length: "long" as SummaryLength };
 const MAX_REDUCE_DEPTH = 4;
@@ -44,7 +105,11 @@ async function getSummarizer(opts: SummarizeOptions) {
         length: opts.length ?? def.length,
         sharedContext: opts.sharedContext,
         monitor(m) {
-            m.addEventListener("downloadprogress", (e: any) => opts.onDownloadProgress?.(e?.loaded ?? 0));
+            m.addEventListener("downloadprogress", (e: any) => {
+                const value = Number(e?.loaded ?? 0);
+                const ratio = Number.isFinite(value) ? value : 0;
+                opts.onDownloadProgress?.(ratio);
+            });
         },
     });
     cache.set(k, s);

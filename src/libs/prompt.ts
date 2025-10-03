@@ -1,3 +1,5 @@
+import type {SummarizerAvailabilityStatus} from "./summarizer.ts";
+
 let _sessionPromise: Promise<any> | null = null;
 
 function getLM(): any {
@@ -6,12 +8,31 @@ function getLM(): any {
     return LM;
 }
 
-async function ensureSession(): Promise<any> {
+export async function getPromptAvailability(): Promise<SummarizerAvailabilityStatus> {
+    let LM: any;
+    try {
+        LM = getLM();
+    } catch (error) {
+        console.warn("[Prompt] LanguageModel API not available.", error);
+        return "unsupported";
+    }
+
+    try {
+        const availability = await LM.availability?.();
+        return typeof availability === "string" && availability.trim() ? availability : "unknown";
+    } catch (error) {
+        console.warn("[Prompt] Failed to read availability.", error);
+        return "error";
+    }
+}
+
+async function ensureSession(opts?: { onDownloadProgress?: (ratio: number) => void }): Promise<any> {
     if (_sessionPromise) return _sessionPromise;
 
     const LM = getLM();
-    // availability: 'available' | 'downloadable' | 'unavailable' | ...
     const availability = await LM.availability?.();
+
+    console.log("[Prompt] LanguageModel availability:", availability);
 
     if (availability === "unavailable") {
         throw new Error("Prompt API is unavailable on this device.");
@@ -20,7 +41,10 @@ async function ensureSession(): Promise<any> {
     _sessionPromise = LM.create({
         monitor(m: EventTarget) {
             m.addEventListener("downloadprogress", (e: any) => {
-                console.debug(`[Prompt] model download: ${(e?.loaded ?? 0) * 100}%`);
+                const value = Number(e?.loaded ?? 0);
+                const ratio = Number.isFinite(value) ? value : 0;
+                console.log(`[Prompt] model download: ${ratio * 100}%`);
+                opts?.onDownloadProgress?.(ratio);
             });
         },
     });
@@ -57,4 +81,22 @@ export async function promptStream(text: string): Promise<AsyncIterable<string>>
 export async function destroyPromptSession() {
     try { (await _sessionPromise)?.destroy?.(); } catch { /* empty */ }
     _sessionPromise = null;
+}
+
+export async function ensurePromptReady(opts?: { onDownloadProgress?: (ratio: number) => void; forceWarmup?: boolean }) {
+    const session = await ensureSession(opts);
+
+    const availability = await getPromptAvailability();
+    if (availability === "available" && !opts?.forceWarmup) {
+        return session;
+    }
+
+    try {
+        await session.prompt("Warm up the on-device prompt model.");
+    } catch (error) {
+        console.warn("[Prompt] Warmup prompt call failed.", error);
+        throw error;
+    }
+
+    return session;
 }
