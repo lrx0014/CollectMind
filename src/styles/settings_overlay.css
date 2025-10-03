@@ -29,6 +29,10 @@
     text-align: center;
     box-shadow: 0 20px 60px rgba(15, 23, 42, 0.25);
     width: min(420px, 100%);
+    max-height: min(90vh, 720px);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
 }
 
 .settings-close {
@@ -71,6 +75,7 @@
     height: 1px;
     margin: 28px 0 24px;
     background: linear-gradient(90deg, rgba(148, 163, 184, 0), rgba(148, 163, 184, 0.6), rgba(148, 163, 184, 0));
+    align-self: stretch;
 }
 
 .settings-panel {
@@ -79,6 +84,23 @@
     display: flex;
     flex-direction: column;
     gap: 20px;
+    width: 100%;
+    overflow-y: auto;
+    padding-right: 6px;
+    flex: 1 1 auto;
+}
+
+.settings-panel::-webkit-scrollbar {
+    width: 6px;
+}
+
+.settings-panel::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.settings-panel::-webkit-scrollbar-thumb {
+    background: rgba(100, 116, 139, 0.4);
+    border-radius: 999px;
 }
 
 .settings-panel-header {
@@ -239,4 +261,38 @@
     cursor: not-allowed;
     opacity: 0.7;
     box-shadow: none;
+}
+
+.setting-action--ghost {
+    background: rgba(248, 250, 252, 0.95);
+    color: #1f2937;
+    border: 1px solid rgba(148, 163, 184, 0.35);
+    box-shadow: none;
+}
+
+.setting-action--ghost:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 10px 18px rgba(30, 64, 175, 0.12);
+}
+
+.setting-action--ghost:active {
+    transform: translateY(0);
+}
+
+.setting-actions {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+    gap: 12px;
+    width: 100%;
+}
+
+.setting-actions .setting-action {
+    width: 100%;
+    align-self: stretch;
+}
+
+.setting-hint {
+    margin: 0;
+    font-size: 12px;
+    color: #6b7280;
 }

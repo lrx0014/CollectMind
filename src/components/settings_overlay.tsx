@@ -240,6 +240,14 @@ const SettingsOverlay: React.FC<SettingsOverlayProps> = ({ open, onClose, appNam
         }
     };
 
+    const handleBackupExport = () => {
+        console.log("[Settings] Backup export triggered.");
+    };
+
+    const handleBackupRestore = () => {
+        console.log("[Settings] Backup restore triggered.");
+    };
+
     const showSummarizerDownloadButton = useMemo(() => {
         if (isSummarizerChecking || isSummarizerDownloading) return false;
         if (normalizedSummarizerAvailability === "unsupported") return false;
@@ -381,6 +389,38 @@ const SettingsOverlay: React.FC<SettingsOverlayProps> = ({ open, onClose, appNam
                                 Download prompt model
                             </button>
                         )}
+                    </div>
+
+                    <div className="setting-card">
+                        <div className="setting-card-header">
+                            <div className="setting-card-copy">
+                                <span className="setting-card-label">Backup &amp; Restore</span>
+                                <span className="setting-card-description">
+                                    Export your saved content for safekeeping or restore it from a backup file.
+                                </span>
+                            </div>
+                        </div>
+
+                        <div className="setting-actions">
+                            <button
+                                type="button"
+                                className="setting-action"
+                                onClick={handleBackupExport}
+                            >
+                                Export backup
+                            </button>
+                            <button
+                                type="button"
+                                className="setting-action setting-action--ghost"
+                                onClick={handleBackupRestore}
+                            >
+                                Restore from file
+                            </button>
+                        </div>
+
+                        <p className="setting-hint">
+                            Restoring replaces your current data with the backup you choose.
+                        </p>
                     </div>
                 </div>
             </div>
