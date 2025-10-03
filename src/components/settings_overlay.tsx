@@ -409,7 +409,7 @@ const SettingsOverlay: React.FC<SettingsOverlayProps> = ({ open, onClose, appNam
                                 onClick={handleSummarizerDownload}
                                 disabled={isSummarizerDownloading || isSummarizerChecking}
                             >
-                                Download summarizer model
+                                Download
                             </button>
                         )}
                     </div>
@@ -452,7 +452,7 @@ const SettingsOverlay: React.FC<SettingsOverlayProps> = ({ open, onClose, appNam
                                 onClick={handlePromptDownload}
                                 disabled={isPromptDownloading || isPromptChecking}
                             >
-                                Download prompt model
+                                Download
                             </button>
                         )}
                     </div>

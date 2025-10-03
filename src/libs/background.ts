@@ -2,6 +2,12 @@
 
 import db from "./db.ts";
 
+chrome.action.onClicked.addListener(async () => {
+    chrome.sidePanel.setPanelBehavior({
+        openPanelOnActionClick: true
+    }).catch((error) => console.error(error));
+});
+
 async function ensureOffscreen(path = "offscreen.html") {
     const url = chrome.runtime.getURL(path);
     const ctx = await chrome.runtime.getContexts({ contextTypes: ["OFFSCREEN_DOCUMENT"], documentUrls: [url] });
