@@ -16,6 +16,8 @@ CollectMind is an AI-powered Bookmark Collection which helps you build your own 
 
 
 ## 2. How to build & run
+> **warning:** The AI features rely on Chrome's built-in AI capabilities, so the minimum required version is **Chrome 138**.
+
 1. clone this repo
 2. ```nvm run build```
 3. Load ```/dict``` directory in Chrome as an unpacked extension.
