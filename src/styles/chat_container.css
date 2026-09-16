@@ -130,6 +130,31 @@
 }
 .message-bubble.ai a { color: #4A90E2; text-decoration: underline; }
 .message-bubble.ai strong { font-weight: 600; }
+.message-citations {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-top: 8px;
+    padding-top: 8px;
+    border-top: 1px solid rgba(0,0,0,0.08);
+}
+.message-citation-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    max-width: 100%;
+    padding: 3px 8px;
+    border-radius: 12px;
+    background: rgba(74, 144, 226, 0.1);
+    color: #4A90E2;
+    font-size: 12px;
+    text-decoration: none;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+.message-citation-chip:hover { background: rgba(74, 144, 226, 0.18); }
+.message-citation-chip svg { flex-shrink: 0; }
 .loading-ellipsis {
     display: inline-flex;
     gap: 6px;

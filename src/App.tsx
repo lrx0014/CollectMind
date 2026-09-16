@@ -3,7 +3,7 @@ import HeaderComponent from "./components/header.tsx";
 import "./styles/app.css";
 import TopicCard from "./components/topic_card.tsx";
 import {useLiveQuery} from "dexie-react-hooks";
-import db, {type ChatMessageRecord, type SavedPage, type Topic} from "./libs/db.ts";
+import db, {type ChatCitation, type ChatMessageRecord, type SavedPage, type Topic} from "./libs/db.ts";
 import {colorOptions} from "./libs/global.ts";
 import Header2 from "./components/header2.tsx";
 import SavedPageCard from "./components/saved_page_card.tsx";
@@ -12,9 +12,11 @@ import ConfirmationModal from "./components/confirmation.tsx";
 import CreateOrUpdateTopicModal from "./components/create_or_update_topic_modal.tsx";
 import {type ChatMessage} from "./components/chat_container.tsx";
 import ChatContainer from "./components/chat_container.tsx";
-import {prompt} from "./libs/prompt.ts";
+import {destroyChatSession, getChatSession, getSessionUsage, normalizeDeltaStream} from "./libs/prompt.ts";
+import {DEFAULT_TOKEN_BUDGET, getAdHocPageRagContext, getTopicRagContext, type RagSource} from "./libs/rag/retrieve.ts";
 import SettingsOverlay from "./components/settings_overlay.tsx";
 import SummaryModal from "./components/summary_modal.tsx";
+import LibraryChatOverlay from "./components/library_chat_overlay.tsx";
 
 // --- Main App Component ---
 const App: React.FC = () => {
@@ -38,6 +40,7 @@ const App: React.FC = () => {
     const [isPageSearchActive, setIsPageSearchActive] = useState(false);
     const [pageSearchQuery, setPageSearchQuery] = useState("");
     const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+    const [isLibraryChatOpen, setIsLibraryChatOpen] = useState(false);
     const [summaryModalOpen, setSummaryModalOpen] = useState(false);
     const [summaryModalTitle, setSummaryModalTitle] = useState("");
     const [summaryModalContent, setSummaryModalContent] = useState("");
@@ -97,10 +100,19 @@ const App: React.FC = () => {
             if (!map[entry.topic_id]) {
                 map[entry.topic_id] = [];
             }
+            let citations: ChatCitation[] | undefined;
+            if (entry.citations) {
+                try {
+                    citations = JSON.parse(entry.citations);
+                } catch (error) {
+                    console.warn('Failed to parse stored citations:', error);
+                }
+            }
             map[entry.topic_id].push({
                 id: entry.id,
                 sender: entry.sender,
                 text: entry.text,
+                citations,
             });
         }
         return map;
@@ -112,7 +124,7 @@ const App: React.FC = () => {
         const persisted = persistedChatMessagesByTopic[topicId] ?? [];
         const pending = pendingAiMessages[topicId] ?? [];
         return [...persisted, ...pending];
-    }, [selectedTopic?.id, persistedChatMessagesByTopic, pendingAiMessages]);
+    }, [selectedTopic, persistedChatMessagesByTopic, pendingAiMessages]);
 
     const pageCountByTopic = useMemo<Record<number, number>>(() => {
         const counts: Record<number, number> = {};
@@ -206,6 +218,7 @@ const App: React.FC = () => {
                         type: "SUMMARIZE_SAVED_PAGE_WITH_TEXT",
                         payload: {
                             pageId,
+                            topicId: selectedTopic.id,
                             url: currentTab.url,
                             title: currentTab.title,
                             text: pageText,
@@ -215,6 +228,24 @@ const App: React.FC = () => {
                             console.warn("BG message error:", chrome.runtime.lastError);
                         } else if (!resp?.ok) {
                             console.warn("BG summarize failed:", resp?.error);
+                        }
+                    });
+
+                    // Chunk + embed the page text for RAG retrieval. Runs
+                    // independently of summarization so one failing doesn't
+                    // block the other.
+                    chrome.runtime.sendMessage({
+                        type: "INDEX_SAVED_PAGE_WITH_TEXT",
+                        payload: {
+                            pageId,
+                            topicId: selectedTopic.id,
+                            text: pageText,
+                        },
+                    }, (resp) => {
+                        if (chrome.runtime.lastError) {
+                            console.warn("BG index message error:", chrome.runtime.lastError);
+                        } else if (!resp?.ok) {
+                            console.warn("BG indexing failed:", resp?.error);
                         }
                     });
 
@@ -265,6 +296,10 @@ const App: React.FC = () => {
             async () => {
                 try {
                     await db.deleteTopicAndItsPages(topic.id);
+                    await Promise.all([
+                        destroyChatSession(getChatSessionKey(topic.id, 'topic')),
+                        destroyChatSession(getChatSessionKey(topic.id, 'page')),
+                    ]);
                     if (selectedTopic?.id === topic.id) {
                         setSelectedTopic(null);
                         setCurrentView('list');
@@ -367,6 +402,12 @@ const App: React.FC = () => {
         const topicId = selectedTopic.id;
         try {
             await db.clearChatMessagesByTopic(topicId);
+            // The model session remembers prior turns internally; destroy both
+            // mode sessions so a "cleared" chat doesn't still carry old context.
+            await Promise.all([
+                destroyChatSession(getChatSessionKey(topicId, 'topic')),
+                destroyChatSession(getChatSessionKey(topicId, 'page')),
+            ]);
             showToast('Chat cleared.');
         } catch (error) {
             console.error('Failed to clear chat messages:', error);
@@ -426,51 +467,83 @@ const App: React.FC = () => {
         };
     };
 
-    const buildPromptInput = async (message: string, mode: 'topic' | 'page'): Promise<string> => {
-        const baseInstructions = [
-            'You are CollectMind, a reference-driven assistant.',
-            'Use only the provided reference materials to answer the user.',
-            'When you mention citing sources, it is better to indicate the title of the document instead of the document numbers.'
-        ].join(' ');
+    // Fixed instructions live in the session's system prompt (set once per
+    // topic+mode session) instead of being re-sent as part of every turn's
+    // user message, now that each topic/mode pair gets its own persistent
+    // LanguageModel session (see getChatSession / SESSION_SYSTEM_PROMPT).
+    const SESSION_SYSTEM_PROMPT = [
+        'You are CollectMind, a reference-driven assistant.',
+        'Use only the provided reference materials (labeled "Source N") to answer the user.',
+        'Answer in prose; do not repeat the raw source list back to the user.'
+    ].join(' ');
 
+    const getChatSessionKey = (topicId: number, mode: 'topic' | 'page') => `topic:${topicId}:${mode}`;
+
+    // How much of the model's remaining context budget to spend on retrieved
+    // reference material for this turn. Read live from the session when the
+    // browser exposes contextUsage/contextWindow (see prompt.ts); otherwise
+    // fall back to a conservative fixed budget.
+    const RESPONSE_TOKEN_RESERVE = 350;
+    const MIN_CONTEXT_BUDGET = 300;
+    const MAX_CONTEXT_BUDGET = 2000;
+
+    const resolveContextBudget = (session: any): number => {
+        const usage = getSessionUsage(session);
+        if (!usage) return DEFAULT_TOKEN_BUDGET;
+        const remaining = usage.total - usage.used - RESPONSE_TOKEN_RESERVE;
+        return Math.max(MIN_CONTEXT_BUDGET, Math.min(MAX_CONTEXT_BUDGET, remaining));
+    };
+
+    const buildTurnContext = async (message: string, mode: 'topic' | 'page', tokenBudget: number): Promise<{ turnMessage: string; sources: RagSource[] }> => {
         if (mode === 'topic') {
             if (!selectedTopic) {
                 throw new Error('No topic selected for topic chat.');
             }
 
-            const topicPages = (savedPages ?? [])
-                .filter(page => page.topic_id === selectedTopic.id)
-                .map((page, index) => {
-                    const summary = page.summary?.trim() || 'Summary is not available yet.';
-                    const safeTitle = page.title?.trim() || 'Untitled page';
-                    return `Document ${index + 1}: ${safeTitle}\nURL: ${page.url}\nSummary:\n${summary}`;
-                });
+            const ragContext = await getTopicRagContext(selectedTopic.id, message, { tokenBudget });
 
-            const referenceMaterial = topicPages.length > 0
-                ? topicPages.join('\n\n')
-                : 'No documents available.';
-
-            return [
-                baseInstructions,
+            const turnMessage = [
                 `The conversation is about the topic: "${selectedTopic.name}".`,
                 'Reference materials:',
-                referenceMaterial,
+                ragContext.referenceBlock,
                 'User question:',
                 message,
             ].join('\n\n');
+
+            return { turnMessage, sources: ragContext.sources };
         }
 
         const activeTab = await fetchActiveTabContext();
-        const pageReference = `Document 1\nTitle: ${activeTab.title}\nURL: ${activeTab.url}\nContent:\n${activeTab.content}`;
+        const ragContext = await getAdHocPageRagContext({
+            text: activeTab.content,
+            query: message,
+            title: activeTab.title,
+            url: activeTab.url,
+            tokenBudget,
+        });
 
-        return [
-            baseInstructions,
+        const turnMessage = [
             'The conversation is about the currently open web page. Use only the provided content.',
             'Reference materials:',
-            pageReference,
+            ragContext.referenceBlock,
             'User question:',
             message,
         ].join('\n\n');
+
+        return { turnMessage, sources: ragContext.sources };
+    };
+
+    const toCitations = (sources: RagSource[]): ChatCitation[] => {
+        const seen = new Set<string>();
+        const citations: ChatCitation[] = [];
+        for (const source of sources) {
+            const key = source.url || source.title;
+            if (!key || seen.has(key)) continue;
+            seen.add(key);
+            citations.push({ title: source.title, url: source.url });
+            if (citations.length >= 5) break;
+        }
+        return citations;
     };
 
     const handleSendMessage = async (message: string, mode: 'topic' | 'page') => {
@@ -511,13 +584,40 @@ const App: React.FC = () => {
             };
         });
 
+        const updateLoadingMessage = (patch: Partial<ChatMessage>) => {
+            setPendingAiMessages(prev => {
+                const existing = prev[topicId];
+                if (!existing) return prev;
+                return {
+                    ...prev,
+                    [topicId]: existing.map(msg => msg.id === loadingMessageId ? { ...msg, ...patch } : msg),
+                };
+            });
+        };
+
         try {
-            const promptInput = await buildPromptInput(message, mode);
-            const aiText = await prompt(promptInput);
+            const session = await getChatSession(getChatSessionKey(topicId, mode), { systemPrompt: SESSION_SYSTEM_PROMPT });
+            const tokenBudget = resolveContextBudget(session);
+            const { turnMessage, sources } = await buildTurnContext(message, mode, tokenBudget);
+
+            let aiText = '';
+            try {
+                const stream = normalizeDeltaStream(await session.promptStreaming(turnMessage));
+                for await (const delta of stream) {
+                    aiText += delta;
+                    updateLoadingMessage({ text: aiText, isLoading: false });
+                }
+            } catch (streamError) {
+                console.warn('Streaming failed, falling back to a single-shot prompt:', streamError);
+                aiText = await session.prompt(turnMessage);
+                updateLoadingMessage({ text: aiText, isLoading: false });
+            }
+
             await db.addChatMessage({
                 topic_id: topicId,
                 sender: 'ai',
                 text: aiText || 'AI returned an empty response.',
+                citations: toCitations(sources),
             });
         } catch (error) {
             console.error('Failed to fetch AI response:', error);
@@ -564,6 +664,7 @@ const App: React.FC = () => {
                                     onSearchChange={(value) => setTopicSearchQuery(value)}
                                     onClearSearch={() => setTopicSearchQuery("")}
                                     onSettingsClick={openSettings}
+                                    onLibraryChatClick={() => setIsLibraryChatOpen(true)}
                                 />
                                 <div className="content-area">
                                     {visibleTopics.length === 0 ? (
@@ -680,7 +781,7 @@ const App: React.FC = () => {
                 open={isSettingsOpen}
                 onClose={closeSettings}
                 appName="CollectMind"
-                version="0.1.0"
+                version={`${__APP_VERSION__} (build.${__BUILD_TIMESTAMP__})`}
             />
 
             <SummaryModal
@@ -688,6 +789,11 @@ const App: React.FC = () => {
                 title={summaryModalTitle}
                 content={summaryModalContent}
                 onClose={() => setSummaryModalOpen(false)}
+            />
+
+            <LibraryChatOverlay
+                open={isLibraryChatOpen}
+                onClose={() => setIsLibraryChatOpen(false)}
             />
         </>
     );

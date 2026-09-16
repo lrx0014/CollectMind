@@ -1,4 +1,4 @@
-import {Search, Settings} from 'lucide-react';
+import {Library, Search, Settings} from 'lucide-react';
 import '../styles/header.css'
 import React, {useEffect, useRef} from "react";
 
@@ -10,6 +10,7 @@ interface HeaderComponentProps {
     onSearchChange: (value: string) => void;
     onClearSearch: () => void;
     onSettingsClick: () => void;
+    onLibraryChatClick?: () => void;
 }
 
 // --- HeaderComponent Definition ---
@@ -21,6 +22,7 @@ const HeaderComponent: React.FC<HeaderComponentProps> = ({
     onSearchChange,
     onClearSearch,
     onSettingsClick,
+    onLibraryChatClick,
 }) => {
     const inputRef = useRef<HTMLInputElement>(null);
 
@@ -71,6 +73,9 @@ const HeaderComponent: React.FC<HeaderComponentProps> = ({
                     </div>
                 ) : (
                     <Search size={22} className="icon" onClick={onToggleSearch} />
+                )}
+                {!isSearchActive && onLibraryChatClick && (
+                    <Library size={22} className="icon" onClick={onLibraryChatClick} aria-label="Ask across all bookmarks" />
                 )}
                 {!isSearchActive && (
                     <Settings size={22} className="icon" onClick={onSettingsClick} />

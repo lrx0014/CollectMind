@@ -135,9 +135,9 @@
 
 .setting-card-header {
     display: flex;
-    align-items: flex-start;
+    align-items: center;
     justify-content: space-between;
-    gap: 16px;
+    gap: 12px;
 }
 
 .setting-card-copy {
@@ -153,6 +153,7 @@
 }
 
 .setting-card-description {
+    margin: 0;
     font-size: 13px;
     color: #6b7280;
     line-height: 1.45;
@@ -162,7 +163,8 @@
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    min-width: 102px;
+    flex-shrink: 0;
+    min-width: 92px;
     padding: 6px 12px;
     border-radius: 999px;
     font-size: 13px;
@@ -295,6 +297,29 @@
     margin: 0;
     font-size: 12px;
     color: #6b7280;
+}
+
+.setting-hint-block {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    align-items: flex-start;
+    padding: 10px 12px;
+    background: rgba(148, 163, 184, 0.12);
+    border-radius: 12px;
+}
+
+.setting-hint-block .setting-action {
+    align-self: flex-start;
+    padding: 8px 14px;
+    font-size: 13px;
+}
+
+.setting-hint-block code {
+    background: rgba(15, 23, 42, 0.08);
+    padding: 1px 4px;
+    border-radius: 4px;
+    font-size: 11px;
 }
 
 .setting-success {

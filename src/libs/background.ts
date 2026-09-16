@@ -41,9 +41,46 @@ async function waitOffscreenReady(timeoutMs = 5000) {
 }
 
 chrome.runtime.onMessage.addListener((msg, _sender, sendResponse) => {
+    if (msg?.type === "INDEX_SAVED_PAGE_WITH_TEXT") {
+        (async () => {
+            const { pageId, topicId, text } = msg.payload as { pageId: number; topicId: number; text: string };
+
+            try {
+                await waitOffscreenReady().catch(() => ensureOffscreen("offscreen.html"));
+
+                chrome.runtime.sendMessage(
+                    { target: "offscreen", type: "OFFSCREEN_INDEX_PAGE", payload: { pageId, topicId, text } },
+                    (resp) => {
+                        const le = chrome.runtime.lastError;
+                        if (le) {
+                            sendResponse({ ok: false, error: le.message ?? String(le) });
+                            return;
+                        }
+                        sendResponse(resp ?? { ok: false, error: "No response from offscreen" });
+                    }
+                );
+            } catch (e: any) {
+                sendResponse({ ok: false, error: e?.message ?? String(e) });
+            }
+        })();
+        return true;
+    }
+
     if (msg?.type === "SUMMARIZE_SAVED_PAGE_WITH_TEXT") {
         (async () => {
-            const { pageId, url, title, text } = msg.payload as { pageId: number; url: string; title: string; text: string; };
+            const { pageId, topicId, url, title, text } = msg.payload as { pageId: number; topicId?: number; url: string; title: string; text: string; };
+
+            const requestTopicSynthesis = () => {
+                if (typeof topicId !== "number") return;
+                // Fire-and-forget: don't make the caller wait on the topic-level
+                // summary re-synthesis, which can itself take a while for topics
+                // with many pages.
+                db.markTopicSummaryStale(topicId).catch((e) => console.warn("Failed to mark topic stale:", e));
+                chrome.runtime.sendMessage(
+                    { target: "offscreen", type: "OFFSCREEN_SYNTHESIZE_TOPIC", payload: { topicId } },
+                    () => void chrome.runtime.lastError // swallow "no receiver" style errors; best-effort
+                );
+            };
 
             try {
                 await waitOffscreenReady().catch(() => ensureOffscreen("offscreen.html")); // 容错
@@ -66,6 +103,7 @@ chrome.runtime.onMessage.addListener((msg, _sender, sendResponse) => {
                         const summary = ok ? (resp.summary || "No summary.") : `Summary failed. ${resp.error ?? ""}`;
                         await db.updatePageSummary(pageId, summary);
                         sendResponse({ ok });
+                        if (ok) requestTopicSynthesis();
                     }
                 );
             } catch (e: any) {

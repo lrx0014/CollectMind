@@ -1,6 +1,7 @@
 // --- ChatContainer Component ---
 import React, {useEffect, useRef, useState} from "react";
-import {ChevronDown, ChevronUp, FileText, Folder, Send} from "lucide-react";
+import {ChevronDown, ChevronUp, ExternalLink, FileText, Folder, Send} from "lucide-react";
+import type {ChatCitation} from "../libs/db.ts";
 import "../styles/chat_container.css"
 
 export interface ChatMessage {
@@ -8,6 +9,7 @@ export interface ChatMessage {
     sender: 'user' | 'ai';
     text: string;
     isLoading?: boolean;
+    citations?: ChatCitation[];
 }
 
 interface ChatContainerProps {
@@ -17,15 +19,19 @@ interface ChatContainerProps {
     isMaximized: boolean;
     setIsMaximized: (isMax: boolean) => void;
     onClearChat: () => Promise<void> | void;
+    // Hides the topic/page mode toggle for chat surfaces with only one mode
+    // (e.g. the cross-topic "library" chat, where "current page" doesn't apply).
+    showModeToggle?: boolean;
+    placeholder?: string;
 }
 
-const ChatContainer: React.FC<ChatContainerProps> = ({ topicName, messages, onSendMessage, isMaximized, setIsMaximized, onClearChat }) => {
+const ChatContainer: React.FC<ChatContainerProps> = ({ topicName, messages, onSendMessage, isMaximized, setIsMaximized, onClearChat, showModeToggle = true, placeholder: placeholderOverride }) => {
     const [chatMode, setChatMode] = useState<'topic' | 'page'>('topic');
     const [message, setMessage] = useState('');
     const textareaRef = useRef<HTMLTextAreaElement>(null);
     const messagesEndRef = useRef<HTMLDivElement>(null);
 
-    const placeholder = chatMode === 'topic' ? `Chat with '${topicName}'...` : "Chat with current page...";
+    const placeholder = placeholderOverride ?? (chatMode === 'topic' ? `Chat with '${topicName}'...` : "Chat with current page...");
 
     useEffect(() => {
         if (textareaRef.current) {
@@ -64,11 +70,13 @@ const ChatContainer: React.FC<ChatContainerProps> = ({ topicName, messages, onSe
                 </button>
             )}
             <div className="chat-input-wrapper">
-                <div className="chat-mode-toggle" style={toggleStyle} onClick={() => setChatMode(prev => prev === 'topic' ? 'page' : 'topic')}>
-                    <div className="toggle-knob" style={knobStyle}>
-                        {chatMode === 'topic' ? <Folder size={14} /> : <FileText size={14} />}
+                {showModeToggle && (
+                    <div className="chat-mode-toggle" style={toggleStyle} onClick={() => setChatMode(prev => prev === 'topic' ? 'page' : 'topic')}>
+                        <div className="toggle-knob" style={knobStyle}>
+                            {chatMode === 'topic' ? <Folder size={14} /> : <FileText size={14} />}
+                        </div>
                     </div>
-                </div>
+                )}
                 <textarea
                     ref={textareaRef}
                     rows={1}
@@ -124,6 +132,23 @@ const ChatContainer: React.FC<ChatContainerProps> = ({ topicName, messages, onSe
                                 </React.Fragment>
                             ));
                         })()}
+                        {!msg.isLoading && msg.citations && msg.citations.length > 0 && (
+                            <div className="message-citations">
+                                {msg.citations.map((citation, index) => (
+                                    <a
+                                        key={`${citation.url}-${index}`}
+                                        className="message-citation-chip"
+                                        href={citation.url}
+                                        target="_blank"
+                                        rel="noreferrer"
+                                        title={citation.url}
+                                    >
+                                        <ExternalLink size={11} />
+                                        {citation.title || citation.url}
+                                    </a>
+                                ))}
+                            </div>
+                        )}
                     </div>
                 ))}
                 <div ref={messagesEndRef} />
