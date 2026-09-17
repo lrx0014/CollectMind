@@ -1,16 +1,18 @@
 import React from "react";
-import {Globe, Trash2, Fullscreen} from "lucide-react";
+import {Globe, Trash2, ExternalLink} from "lucide-react";
 import type {SavedPage} from "../libs/db.ts";
 import "../styles/saved_page.css";
 
 interface SavedPageCardProps {
     page: SavedPage,
     onDelete: () => void,
+    // Clicking the card body opens the summary; onOpenPage is the top-right
+    // button that jumps to the original page instead.
     onClick?: () => void,
-    onViewSummary: () => void,
+    onOpenPage: () => void,
 }
 
-const SavedPageCard: React.FC<SavedPageCardProps> = ({page, onDelete, onClick, onViewSummary}) => {
+const SavedPageCard: React.FC<SavedPageCardProps> = ({page, onDelete, onClick, onOpenPage}) => {
     const handleImageError = (e: React.SyntheticEvent<HTMLImageElement, Event>) => {
         e.currentTarget.style.display = 'none'; // Hide broken image icon
         e.currentTarget.parentElement?.classList.add('no-image'); // Add class to show fallback
@@ -39,11 +41,11 @@ const SavedPageCard: React.FC<SavedPageCardProps> = ({page, onDelete, onClick, o
                 <p className="page-summary">{cleanedSummary}</p>
             </div>
             <div className="card-actions">
-                <button className="action-button" title="View Summary" onClick={(e) => {
-                    e.stopPropagation(); /* view summary */
-                    onViewSummary();
+                <button className="action-button" title="Open page" onClick={(e) => {
+                    e.stopPropagation(); /* open original page */
+                    onOpenPage();
                 }}>
-                    <Fullscreen size={16}/>
+                    <ExternalLink size={16}/>
                 </button>
                 <button className="action-button" title="Delete" onClick={(e) => {
                     e.stopPropagation(); /* Delete */

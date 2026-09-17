@@ -1,10 +1,5 @@
-import * as React from 'react';
-import Button from '@mui/material/Button';
-import Dialog from '@mui/material/Dialog';
-import DialogActions from '@mui/material/DialogActions';
-import DialogContent from '@mui/material/DialogContent';
-import DialogContentText from '@mui/material/DialogContentText';
-import DialogTitle from '@mui/material/DialogTitle';
+import React from 'react';
+import '../styles/confirmation.css';
 
 interface ConfirmationModalProps {
     open: boolean;
@@ -15,28 +10,25 @@ interface ConfirmationModalProps {
 }
 
 const ConfirmationModal: React.FC<ConfirmationModalProps> = ({ open, title, message, onConfirm, onClose }) => {
+    if (!open) return null;
 
     return (
-        <Dialog
-            onClose={onClose}
-            aria-labelledby="alert-dialog-title"
-            aria-describedby="alert-dialog-description" open={open} >
-            <DialogTitle id="alert-dialog-title">
-                {title}
-            </DialogTitle>
-            <DialogContent>
-                <DialogContentText id="alert-dialog-description">
-                    {message}
-                </DialogContentText>
-            </DialogContent>
-            <DialogActions>
-                <Button onClick={onClose} autoFocus>Close</Button>
-                <Button onClick={onConfirm}>
-                    Confirm
-                </Button>
-            </DialogActions>
-        </Dialog>
+        <div className="confirmation-overlay" role="alertdialog" aria-modal="true" aria-labelledby="confirmation-title">
+            <div className="confirmation-backdrop" onClick={onClose} />
+            <div className="confirmation-content">
+                <h2 id="confirmation-title" className="confirmation-title">{title}</h2>
+                <p className="confirmation-message">{message}</p>
+                <div className="confirmation-actions">
+                    <button type="button" className="confirmation-button confirmation-button--ghost" onClick={onClose} autoFocus>
+                        Close
+                    </button>
+                    <button type="button" className="confirmation-button confirmation-button--danger" onClick={onConfirm}>
+                        Confirm
+                    </button>
+                </div>
+            </div>
+        </div>
     );
-}
+};
 
 export default ConfirmationModal;

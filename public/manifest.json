@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "CollectMind",
-  "version": "0.1.0",
+  "version": "2.0.0",
   "description": "CollectMind is an AI-powered Bookmark Collection which helps people build their own knowledge base.",
   "icons": {
     "16": "images/icon16.png",
@@ -10,8 +10,17 @@
     "128": "images/icon128.png"
   },
 
-  "permissions": ["sidePanel", "tabs", "scripting", "offscreen"],
+  "permissions": ["sidePanel", "scripting", "offscreen", "unlimitedStorage", "identity", "identity.email"],
   "host_permissions": ["<all_urls>"],
+
+  "content_security_policy": {
+    "extension_pages": "script-src 'self' 'wasm-unsafe-eval'; object-src 'self';"
+  },
+
+  "oauth2": {
+    "client_id": "379035688623-d0ui3niohpsidhgtenhh8bgaa4j1nb93.apps.googleusercontent.com",
+    "scopes": ["https://www.googleapis.com/auth/drive.appdata"]
+  },
   "action": {
     "default_title": "CollectMind"
   },
@@ -26,6 +35,7 @@
   },
 
   "web_accessible_resources": [
-    { "resources": ["offscreen.html"], "matches": ["<all_urls>"] }
+    { "resources": ["offscreen.html"], "matches": ["<all_urls>"] },
+    { "resources": ["assets/*.wasm", "assets/*.mjs"], "matches": ["<all_urls>"] }
   ]
 }

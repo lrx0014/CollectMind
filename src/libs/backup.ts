@@ -44,6 +44,7 @@ function normalizeTopic(raw: any): TopicRecord {
         create_time: toValidTimestamp(raw?.create_time),
         update_time: toValidTimestamp(raw?.update_time),
         is_deleted: raw?.is_deleted === 1 ? 1 : 0,
+        summary_stale: raw?.summary_stale === 1 ? 1 : 0,
     };
 
     return normalized;
@@ -61,6 +62,11 @@ function normalizeSavedPage(raw: any): SavedPageRecord {
         create_time: toValidTimestamp(raw?.create_time),
         update_time: toValidTimestamp(raw?.update_time),
         is_deleted: raw?.is_deleted === 1 ? 1 : 0,
+        // The search index isn't part of the backup archive (it's large,
+        // regenerable, binary data), so restored pages always come back
+        // unindexed; Settings > "Rebuild index" repopulates it afterwards.
+        content_hash: '',
+        indexed_at: 0,
     };
 
     return normalized;
@@ -211,11 +217,15 @@ export async function restoreBackupFromFile(file: File | Blob): Promise<RestoreS
     const savedPages = Array.isArray(savedPagesRaw) ? savedPagesRaw.map(normalizeSavedPage) : [];
     const chatMessages = Array.isArray(chatMessagesRaw) ? chatMessagesRaw.map(normalizeChatMessage) : [];
 
-    await db.transaction('rw', db.topics, db.saved_pages, db.chat_messages, async () => {
+    await db.transaction('rw', db.topics, db.saved_pages, db.chat_messages, db.chunks, async () => {
         await Promise.all([
             db.topics.clear(),
             db.saved_pages.clear(),
             db.chat_messages.clear(),
+            // Restored pages are marked unindexed above; drop any old chunks so
+            // they don't dangle against page ids that may now mean something
+            // else (or point at pages restored with indexed_at reset to 0).
+            db.chunks.clear(),
         ]);
 
         if (topics.length > 0) {

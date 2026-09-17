@@ -12,6 +12,12 @@ dist
 dist-ssr
 *.local
 
+# Extension signing keys — never commit; see keys/README.md
+*.pem
+
+# Chrome Web Store upload package (npm run build:store)
+collectmind-store-*.zip
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json

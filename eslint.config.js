@@ -20,7 +20,19 @@ export default defineConfig([
       globals: globals.browser,
     },
       rules: {
-        "@typescript-eslint/no-explicit-any": ["off"]
+        "@typescript-eslint/no-explicit-any": ["off"],
+        "@typescript-eslint/no-unused-vars": ["error", {
+          // Convention used throughout this codebase: a leading underscore
+          // marks an intentionally-unused binding (discarded catch error,
+          // ignored callback arg, or a destructured key dropped via rest
+          // siblings to build an "omit this key" object).
+          args: "all",
+          argsIgnorePattern: "^_",
+          varsIgnorePattern: "^_",
+          caughtErrors: "all",
+          caughtErrorsIgnorePattern: "^_",
+          ignoreRestSiblings: true,
+        }]
     }
   },
 ])

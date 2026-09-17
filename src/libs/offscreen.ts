@@ -1,4 +1,40 @@
 import {summarize} from "./summarizer.ts";
+import {indexSavedPage} from "./rag/indexer.ts";
+import {synthesizeTopicSummary} from "./rag/topic-summary.ts";
+
+chrome.runtime.onMessage.addListener((msg, _sender, sendResponse) => {
+    if (msg?.target === "offscreen" && msg?.type === "OFFSCREEN_SYNTHESIZE_TOPIC") {
+        (async () => {
+            try {
+                const { topicId } = msg.payload as { topicId: number };
+                const summary = await synthesizeTopicSummary(topicId);
+                sendResponse({ ok: true, summary });
+            } catch (e: any) {
+                console.error("offscreen topic synthesis failed:", e?.message ?? String(e));
+                sendResponse({ ok: false, error: e?.message ?? String(e) });
+            }
+        })();
+
+        return true;
+    }
+});
+
+chrome.runtime.onMessage.addListener((msg, _sender, sendResponse) => {
+    if (msg?.target === "offscreen" && msg?.type === "OFFSCREEN_INDEX_PAGE") {
+        (async () => {
+            try {
+                const { pageId, topicId, text } = msg.payload as { pageId: number; topicId: number; text: string };
+                const result = await indexSavedPage({ pageId, topicId, text });
+                sendResponse({ ok: true, chunkCount: result.chunkCount, skipped: result.skipped });
+            } catch (e: any) {
+                console.error("offscreen indexing failed:", e?.message ?? String(e));
+                sendResponse({ ok: false, error: e?.message ?? String(e) });
+            }
+        })();
+
+        return true;
+    }
+});
 
 chrome.runtime.onMessage.addListener((msg, _sender, sendResponse) => {
     if (msg?.target === "offscreen" && msg?.type === "OFFSCREEN_SUMMARIZE") {
