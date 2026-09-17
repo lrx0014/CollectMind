@@ -10,7 +10,7 @@
     "128": "images/icon128.png"
   },
 
-  "permissions": ["sidePanel", "tabs", "scripting", "offscreen", "unlimitedStorage", "identity", "identity.email"],
+  "permissions": ["sidePanel", "scripting", "offscreen", "unlimitedStorage", "identity", "identity.email"],
   "host_permissions": ["<all_urls>"],
 
   "content_security_policy": {
