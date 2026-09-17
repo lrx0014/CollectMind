@@ -1,0 +1,235 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CollectMind — An on-device AI knowledge base for your bookmarks</title>
+<meta name="description" content="CollectMind turns your bookmarks into a searchable, AI-summarized knowledge base — entirely on-device, powered by Chrome's built-in Gemini Nano. No servers, no accounts, no data leaving your browser.">
+
+<meta property="og:type" content="website">
+<meta property="og:title" content="CollectMind — An on-device AI knowledge base for your bookmarks">
+<meta property="og:description" content="Organize bookmarks by topic, auto-summarize pages, and chat with your collection — all powered by Chrome's built-in on-device AI. No servers, no accounts.">
+<meta property="og:image" content="images/9.png">
+<meta name="twitter:card" content="summary_large_image">
+
+<link rel="icon" href="images/icon_origin.png">
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+<header class="site-header">
+    <div class="container">
+        <a class="brand" href="#">
+            <img src="images/icon_origin.png" alt="CollectMind logo">
+            CollectMind
+        </a>
+        <ul class="nav-links">
+            <li><a href="#features">Features</a></li>
+            <li><a href="#how-it-works">How it works</a></li>
+            <li><a href="#screenshots">Screenshots</a></li>
+            <li><a href="privacy.html">Privacy</a></li>
+        </ul>
+        <a class="nav-cta" href="https://github.com/lrx0014/CollectMind" target="_blank" rel="noreferrer">View on GitHub</a>
+    </div>
+</header>
+
+<section class="hero">
+    <div class="container">
+        <img class="hero-logo" src="images/icon_origin.png" alt="CollectMind logo">
+        <h1>Your bookmarks, turned into<br>an AI-searchable knowledge base</h1>
+        <p class="subtitle">
+            CollectMind organizes what you save, summarizes it automatically, and lets you chat with
+            a single page, a whole topic, or your entire collection — powered entirely by the AI
+            already built into Chrome.
+        </p>
+        <div class="hero-actions">
+            <!-- TODO: swap this for the real Chrome Web Store listing link once published -->
+            <a class="btn btn-primary" href="https://github.com/lrx0014/CollectMind#3-how-to-build--run" target="_blank" rel="noreferrer">Get CollectMind</a>
+            <a class="btn btn-secondary" href="https://github.com/lrx0014/CollectMind" target="_blank" rel="noreferrer">View source on GitHub</a>
+        </div>
+        <p class="hero-note">Free &amp; open source · MIT licensed · Chrome 138+</p>
+    </div>
+</section>
+
+<div class="container">
+    <div class="privacy-banner">
+        <span class="icon">&#128274;</span>
+        <div>
+            <strong>Runs entirely on your device.</strong>
+            <p>
+                Summarization, search, and chat all run on Chrome's built-in Gemini Nano and a local
+                embedding model — there's no backend server, no API key, and no account required.
+                Your bookmarks, page content, and chat history never leave your machine. The one
+                deliberate exception is backup: if you choose to back up to Google Drive, it goes
+                straight from your browser to <em>your own</em> Drive — CollectMind has no server in
+                between and never sees it. Read the full <a href="privacy.html">privacy policy</a>.
+            </p>
+        </div>
+    </div>
+</div>
+
+<section id="features">
+    <div class="container">
+        <div class="section-heading">
+            <span class="eyebrow">Features</span>
+            <h2>Everything you need to actually use what you save</h2>
+            <p>Bookmarking is easy. Finding it again — and remembering why you saved it — is the hard part.</p>
+        </div>
+        <div class="feature-grid">
+            <div class="feature-card">
+                <span class="badge">01</span>
+                <h3>Organize by topic</h3>
+                <p>Group saved pages into topics instead of one long, unsearchable bookmarks list.</p>
+            </div>
+            <div class="feature-card">
+                <span class="badge">02</span>
+                <h3>One-click save</h3>
+                <p>Bookmark the page you're on with a single click, right from the side panel.</p>
+            </div>
+            <div class="feature-card">
+                <span class="badge">03</span>
+                <h3>Automatic summaries</h3>
+                <p>Every saved page gets summarized on-device the moment it's added — no waiting, no setup.</p>
+            </div>
+            <div class="feature-card">
+                <span class="badge">04</span>
+                <h3>Chat with a topic (RAG)</h3>
+                <p>Ask questions about a topic and get answers grounded in your saved pages, with clickable source citations.</p>
+            </div>
+            <div class="feature-card">
+                <span class="badge">05</span>
+                <h3>Chat with any page</h3>
+                <p>Ask about the page you're currently reading, even before you decide to save it.</p>
+            </div>
+            <div class="feature-card">
+                <span class="badge">06</span>
+                <h3>Ask your whole collection</h3>
+                <p>"Library" mode searches every topic at once — no more remembering which topic you filed something under.</p>
+            </div>
+            <div class="feature-card">
+                <span class="badge">07</span>
+                <h3>Auto-updated topic summaries</h3>
+                <p>Topic-level overviews stay fresh automatically as you add more pages.</p>
+            </div>
+            <div class="feature-card">
+                <span class="badge">08</span>
+                <h3>Backup &amp; restore</h3>
+                <p>Save snapshots locally or to your own Google Drive, and restore any of them, any time.</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section id="how-it-works">
+    <div class="container">
+        <div class="section-heading">
+            <span class="eyebrow">How it works</span>
+            <h2>No server. No API key. No account.</h2>
+            <p>CollectMind runs entirely on Chrome's built-in AI plus a small local embedding model — nothing is sent to a server.</p>
+        </div>
+        <div class="how-grid">
+            <div class="how-card">
+                <div class="step">Summarizing &amp; chatting</div>
+                <h3>Chrome's built-in Gemini Nano</h3>
+                <p>The Summarizer and Prompt APIs — running on-device, inside Chrome itself — handle page summaries and conversational answers.</p>
+            </div>
+            <div class="how-card">
+                <div class="step">Retrieval</div>
+                <h3>Local RAG, in a background worker</h3>
+                <p>
+                    Saved pages are split into chunks and embedded locally with a small model
+                    (<code>Xenova/multilingual-e5-small</code>). When you chat, only the most
+                    relevant chunks are retrieved and fed to the model, instead of stuffing every
+                    saved page into the prompt.
+                </p>
+            </div>
+            <div class="how-card">
+                <div class="step">Storage</div>
+                <h3>Everything stays in your browser</h3>
+                <p>Topics, pages, chat history, and the search index all live in IndexedDB, on your machine — check indexing status and rebuild it any time from Settings.</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section id="screenshots" class="screenshot-section">
+    <div class="container">
+        <div class="section-heading">
+            <span class="eyebrow">Screenshots</span>
+            <h2>A closer look</h2>
+        </div>
+        <div class="screenshot-grid">
+            <figure class="screenshot-card">
+                <img src="images/1.png" alt="CollectMind start page" loading="lazy">
+                <figcaption>Start page</figcaption>
+            </figure>
+            <figure class="screenshot-card">
+                <img src="images/3.png" alt="Topic list" loading="lazy">
+                <figcaption>Topic list</figcaption>
+            </figure>
+            <figure class="screenshot-card">
+                <img src="images/4.png" alt="Saved pages list" loading="lazy">
+                <figcaption>Saved pages list</figcaption>
+            </figure>
+            <figure class="screenshot-card">
+                <img src="images/6.png" alt="Summary details" loading="lazy">
+                <figcaption>Summary details</figcaption>
+            </figure>
+            <figure class="screenshot-card">
+                <img src="images/7.png" alt="AI chat based on topics" loading="lazy">
+                <figcaption>AI chat based on topics</figcaption>
+            </figure>
+            <figure class="screenshot-card">
+                <img src="images/11.png" alt="Ask anything in your collection" loading="lazy">
+                <figcaption>Ask your entire collection</figcaption>
+            </figure>
+            <figure class="screenshot-card">
+                <img src="images/9.png" alt="Settings, local models" loading="lazy">
+                <figcaption>Settings — local models</figcaption>
+            </figure>
+            <figure class="screenshot-card">
+                <img src="images/10.png" alt="Settings, backup and cloud" loading="lazy">
+                <figcaption>Settings — backup &amp; cloud</figcaption>
+            </figure>
+        </div>
+    </div>
+</section>
+
+<section>
+    <div class="container">
+        <div class="requirements-box">
+            <strong>Before you install:</strong> CollectMind's AI features rely on Chrome's built-in AI, so you'll need
+            <strong>Chrome 138+</strong> and a device that meets the on-device model's real hardware requirements:
+            <strong>&ge;22GB free disk space</strong>, plus either a GPU with <strong>&gt;4GB VRAM</strong> or
+            <strong>16GB+ RAM and 4+ CPU cores</strong>. See the
+            <a href="https://github.com/lrx0014/CollectMind#3-how-to-build--run" target="_blank" rel="noreferrer">README</a>
+            for details and troubleshooting.
+        </div>
+    </div>
+</section>
+
+<section>
+    <div class="cta-band">
+        <h2>Stop losing what you save</h2>
+        <p>CollectMind is free, open source, and runs entirely on your device.</p>
+        <div class="hero-actions">
+            <a class="btn btn-primary" href="https://github.com/lrx0014/CollectMind" target="_blank" rel="noreferrer">View on GitHub</a>
+            <a class="btn btn-secondary" href="privacy.html">Read the privacy policy</a>
+        </div>
+    </div>
+</section>
+
+<footer class="site-footer">
+    <div class="container">
+        <span class="footer-copy">&copy; 2026 CollectMind. MIT Licensed.</span>
+        <ul class="footer-links">
+            <li><a href="https://github.com/lrx0014/CollectMind" target="_blank" rel="noreferrer">GitHub</a></li>
+            <li><a href="https://github.com/lrx0014/CollectMind/blob/master/LICENSE" target="_blank" rel="noreferrer">License</a></li>
+            <li><a href="privacy.html">Privacy Policy</a></li>
+            <li><a href="https://github.com/lrx0014/CollectMind/issues" target="_blank" rel="noreferrer">Support</a></li>
+        </ul>
+    </div>
+</footer>
+
+</body>
+</html>
