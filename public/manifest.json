@@ -2,7 +2,6 @@
   "manifest_version": 3,
   "name": "CollectMind",
   "version": "2.0.0",
-  "key": "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAp8hmot6L7huyXa+LKwQZNK6EmR//eM2HswkcSxLDeS7zAzHu4GCqOZXRh3izOgDCj53DFIyL1HQUbybPVuIY2GW/IzB8DfID/eS10bcLtgQgvXp5DDR6JcTbuDJ4rY/LdQ3mXtfi1M9+5O+OGchbVYoaP4y3Twkbs9bUEeyfKRvJSV620Rkt8dZmAEPwGjEfaPE0tPYC1IlhQ+rY6L/qewk1Ci2ek2eFlg2Mv6XevfQy53Lz4P4+Ad20LE+56fYbLYcDrDoRcLzTBsf1DFupSXm/0lHOSXXmBybfQfG3KaCkJPFyi+lIFbZu2PZ6UKMyZJ1lr1TlwCHWRSFxb0ebAQIDAQAB",
   "description": "CollectMind is an AI-powered Bookmark Collection which helps people build their own knowledge base.",
   "icons": {
     "16": "images/icon16.png",
@@ -37,6 +36,6 @@
 
   "web_accessible_resources": [
     { "resources": ["offscreen.html"], "matches": ["<all_urls>"] },
-    { "resources": ["onnx-wasm/*"], "matches": ["<all_urls>"] }
+    { "resources": ["assets/*.wasm", "assets/*.mjs"], "matches": ["<all_urls>"] }
   ]
 }

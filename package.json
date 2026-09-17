@@ -6,14 +6,12 @@
   "scripts": {
     "dev": "vite",
     "build": "tsc -b && vite build",
+    "build:store": "npm run build && node scripts/build-for-store.mjs",
     "lint": "eslint .",
     "preview": "vite preview"
   },
   "dependencies": {
-    "@emotion/react": "^11.14.0",
-    "@emotion/styled": "^11.14.1",
     "@huggingface/transformers": "^4.3.0",
-    "@mui/material": "^7.3.2",
     "dexie": "^4.2.0",
     "dexie-react-hooks": "^4.2.0",
     "jszip": "^3.10.1",

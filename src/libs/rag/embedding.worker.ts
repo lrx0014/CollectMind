@@ -17,12 +17,24 @@ env.allowLocalModels = false;
 // factory in a Blob and doing `import(blob:...)`. MV3's extension CSP
 // (script-src 'self') blocks that blob: import outright, which surfaces as
 // "no available backend found" / "Failed to fetch dynamically imported
-// module: blob:...". Pointing wasmPaths at real extension-local copies of
-// those files (see public/onnx-wasm/, kept in sync with whichever variant
-// @huggingface/transformers pulls in — currently ort-wasm-simd-threaded.
-// asyncify.{wasm,mjs}) makes it fetch/import them normally instead.
+// module: blob:...".
+//
+// Pointing wasmPaths at these two files explicitly makes it fetch/import them
+// normally instead. Referencing them via `new URL(..., import.meta.url)`
+// (rather than a separate copy under public/) lets Vite's own asset pipeline
+// bundle them — and because onnxruntime-web's shipped bundle *also* contains
+// a `new URL("ort-wasm-simd-threaded.asyncify.wasm", ...)` reference to this
+// exact file (a dead fallback for the same blob-import path above, unreached
+// once wasmPaths is set, but still visible to Vite's static analysis), Vite
+// dedupes both references to the identical file content into a single output
+// asset instead of shipping it twice. Verify after any onnxruntime-web
+// version bump: `du -sh dist/assets/*.wasm` should show one ~26MB file, not
+// two — see keys/README.md-style note, or just check dist/ after building.
 if (env.backends.onnx.wasm) {
-    env.backends.onnx.wasm.wasmPaths = `${self.location.origin}/onnx-wasm/`;
+    env.backends.onnx.wasm.wasmPaths = {
+        wasm: new URL('../../../node_modules/onnxruntime-web/dist/ort-wasm-simd-threaded.asyncify.wasm', import.meta.url).href,
+        mjs: new URL('../../../node_modules/onnxruntime-web/dist/ort-wasm-simd-threaded.asyncify.mjs', import.meta.url).href,
+    };
     // Also sidesteps a *second*, unconditional blob-wrapped worker ONNX
     // Runtime spawns for its thread pool when numThreads !== 1; we're already
     // off the main thread inside this dedicated worker, so we don't need

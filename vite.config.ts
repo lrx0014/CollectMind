@@ -32,20 +32,6 @@ export default defineConfig({
               {
                   src: 'src/styles',
                   dest: ''
-              },
-              {
-                  // ONNX Runtime Web needs real, fetchable copies of its wasm
-                  // binary + .mjs glue file to avoid its blob:-URL dynamic
-                  // import fallback, which MV3's CSP blocks (see
-                  // src/libs/rag/embedding.worker.ts). Copied straight from
-                  // node_modules at build time instead of committing a ~26MB
-                  // binary to the repo; stays in sync with whatever version of
-                  // onnxruntime-web is actually installed. If @huggingface/
-                  // transformers ever switches to a different wasm variant
-                  // (currently ort-wasm-simd-threaded.asyncify), update both
-                  // this glob and wasmPaths together.
-                  src: 'node_modules/onnxruntime-web/dist/ort-wasm-simd-threaded.asyncify.*',
-                  dest: 'onnx-wasm'
               }
           ]
       })

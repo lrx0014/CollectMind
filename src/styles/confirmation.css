@@ -1,0 +1,72 @@
+.confirmation-overlay {
+    position: fixed;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1300;
+}
+
+.confirmation-backdrop {
+    position: absolute;
+    inset: 0;
+    background: rgba(15, 23, 42, 0.55);
+}
+
+.confirmation-content {
+    position: relative;
+    z-index: 1;
+    width: min(380px, 90vw);
+    background: #ffffff;
+    border-radius: 18px;
+    box-shadow: 0 20px 60px rgba(15, 23, 42, 0.25);
+    padding: 24px;
+}
+
+.confirmation-title {
+    margin: 0 0 10px;
+    font-size: 18px;
+    font-weight: 600;
+    color: #111827;
+}
+
+.confirmation-message {
+    margin: 0 0 20px;
+    font-size: 14px;
+    line-height: 1.5;
+    color: #374151;
+}
+
+.confirmation-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+}
+
+.confirmation-button {
+    border: none;
+    border-radius: 999px;
+    padding: 8px 16px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background-color 0.15s ease;
+}
+
+.confirmation-button--ghost {
+    background: rgba(148, 163, 184, 0.15);
+    color: #1f2937;
+}
+
+.confirmation-button--ghost:hover {
+    background: rgba(148, 163, 184, 0.25);
+}
+
+.confirmation-button--danger {
+    background: #DC2626;
+    color: #fff;
+}
+
+.confirmation-button--danger:hover {
+    background: #B91C1C;
+}
