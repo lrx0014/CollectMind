@@ -1,10 +1,22 @@
 # CollectMind
 
+<p align="center">
+  <b>English</b> |
+  <a href="./docs/README.de.md">Deutsch</a> |
+  <a href="./docs/README.fr.md">Français</a> |
+  <a href="./docs/README.ja.md">日本語</a> |
+  <a href="./docs/README.es.md">Español</a> |
+  <a href="./docs/README.zh-CN.md">简体中文</a> |
+  <a href="./docs/README.zh-TW.md">繁體中文</a>
+</p>
+
 <div style="text-align: center">
 <img src="./docs/images/icon_origin.png"/>
 </div>
 
 CollectMind is an AI-powered Bookmark Collection which helps you build your own knowledge base.
+
+**Everything runs entirely on-device.** Summarization, retrieval, and chat are all powered by Chrome's built-in Gemini Nano and a local embedding model running in your browser — there's no backend server, no API key, and no account required. Your bookmarks, page content, and chat history never leave your machine. The one deliberate exception is backup: if you choose to back up to Google Drive, that data goes straight from your browser to *your own* Drive storage — CollectMind has no server in between and never sees it.
 
 ## 1. Main Features
 * Manage your bookmarks by topic
@@ -15,8 +27,7 @@ CollectMind is an AI-powered Bookmark Collection which helps you build your own 
 * **Ask across your entire collection** — a "Library" chat mode that searches every topic at once, so you don't need to remember which topic you filed something under
 * Auto-synthesized topic-level summaries, kept fresh as pages are added
 * Streaming AI responses
-* Backup and restore
-* Everything runs on-device — no servers, no API keys, no data leaving your browser
+* Backup and restore, either to a local file or to your own Google Drive (multiple snapshots, restore any of them)
 
 ## 2. How it works
 
@@ -81,6 +92,17 @@ The first time you summarize a page or chat, Chrome will prompt to download its 
 </figure>
 
 <figure style="display:inline-block; text-align:center; margin: 10px;">
-  <figcaption> 9. Settings </figcaption>
+  <figcaption> 9. Ask anything in your collections (all of them) </figcaption>
+  <img src="./docs/images/11.png" width="200">
+</figure>
+
+<figure style="display:inline-block; text-align:center; margin: 10px;">
+  <figcaption> 10. Settings (Local Models) </figcaption>
   <img src="./docs/images/9.png" width="200">
 </figure>
+
+<figure style="display:inline-block; text-align:center; margin: 10px;">
+  <figcaption> 11. Settings (Backup and Cloud) </figcaption>
+  <img src="./docs/images/10.png" width="200">
+</figure>
+
