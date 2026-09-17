@@ -322,6 +322,79 @@
     font-size: 11px;
 }
 
+.drive-backup-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    max-height: 220px;
+    overflow-y: auto;
+}
+
+.drive-backup-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 8px 12px;
+    background: rgba(248, 250, 252, 0.9);
+    border: 1px solid rgba(148, 163, 184, 0.25);
+    border-radius: 12px;
+}
+
+.drive-backup-meta {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    min-width: 0;
+}
+
+.drive-backup-date {
+    font-size: 13px;
+    font-weight: 600;
+    color: #1f2937;
+}
+
+.drive-backup-size {
+    font-size: 11px;
+    color: #6b7280;
+}
+
+.drive-backup-actions {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex-shrink: 0;
+}
+
+.drive-backup-actions .setting-action {
+    padding: 6px 12px;
+    font-size: 13px;
+    box-shadow: none;
+}
+
+.drive-backup-delete {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    border: none;
+    background: rgba(220, 38, 38, 0.1);
+    color: #DC2626;
+    cursor: pointer;
+    transition: background-color 0.15s ease;
+}
+
+.drive-backup-delete:hover {
+    background: rgba(220, 38, 38, 0.18);
+}
+
+.drive-backup-delete:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
 .setting-success {
     margin: 0;
     font-size: 13px;

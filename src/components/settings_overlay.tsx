@@ -1,10 +1,22 @@
 import React, {useEffect, useMemo, useRef, useState} from "react";
+import {Trash2} from "lucide-react";
 import {useLiveQuery} from "dexie-react-hooks";
 import {ensureSummarizerReady, getSummarizerAvailability, type SummarizerAvailabilityStatus} from "../libs/summarizer.ts";
 import {ensurePromptReady, getPromptAvailability} from "../libs/prompt.ts";
 import {createBackupArchive, downloadBackupArchive, restoreBackupFromFile} from "../libs/backup.ts";
 import {getAiCapabilities, type EmbeddingAvailabilityStatus} from "../libs/capabilities.ts";
 import {reindexAllPages} from "../libs/rag/indexer.ts";
+import {
+    backupToDrive,
+    connectGoogleAccount,
+    deleteDriveBackup,
+    disconnectGoogleAccount,
+    getConnectionStatus,
+    listDriveBackups,
+    restoreFromDriveBackup,
+    type DriveAccountInfo,
+    type DriveBackupEntry,
+} from "../libs/sync/drive.ts";
 import db from "../libs/db.ts";
 import "../styles/settings_overlay.css";
 
@@ -54,6 +66,18 @@ const SettingsOverlay: React.FC<SettingsOverlayProps> = ({ open, onClose, appNam
     const [backupRestoreError, setBackupRestoreError] = useState<string | null>(null);
     const [backupInfoMessage, setBackupInfoMessage] = useState<string | null>(null);
     const backupFileInputRef = useRef<HTMLInputElement | null>(null);
+
+    const [driveAccount, setDriveAccount] = useState<DriveAccountInfo | null>(null);
+    const [isDriveCheckingConnection, setIsDriveCheckingConnection] = useState(false);
+    const [isDriveConnecting, setIsDriveConnecting] = useState(false);
+    const [isDriveBackingUp, setIsDriveBackingUp] = useState(false);
+    const [driveError, setDriveError] = useState<string | null>(null);
+    const [driveInfoMessage, setDriveInfoMessage] = useState<string | null>(null);
+    const [driveBackups, setDriveBackups] = useState<DriveBackupEntry[]>([]);
+    const [isDriveListLoading, setIsDriveListLoading] = useState(false);
+    // Which backup (if any) currently has a restore/delete in flight — used to
+    // disable just that row (and label its button) rather than the whole list.
+    const [driveBusy, setDriveBusy] = useState<{ id: string; action: "restore" | "delete" } | null>(null);
 
     const normalizedSummarizerAvailability = useMemo(
         () => (summarizerAvailability ?? "unknown").toString().toLowerCase(),
@@ -190,10 +214,36 @@ const SettingsOverlay: React.FC<SettingsOverlayProps> = ({ open, onClose, appNam
             }
         };
 
+        const fetchDriveConnectionStatus = async () => {
+            setIsDriveCheckingConnection(true);
+            try {
+                const account = await getConnectionStatus();
+                if (!cancelled) {
+                    setDriveAccount(account);
+                }
+                if (account && !cancelled) {
+                    setIsDriveListLoading(true);
+                    try {
+                        const backups = await listDriveBackups();
+                        if (!cancelled) setDriveBackups(backups);
+                    } finally {
+                        if (!cancelled) setIsDriveListLoading(false);
+                    }
+                }
+            } catch (error) {
+                console.warn("[Settings] Failed to check Google Drive connection.", error);
+            } finally {
+                if (!cancelled) {
+                    setIsDriveCheckingConnection(false);
+                }
+            }
+        };
+
         fetchSummarizerAvailability();
         fetchPromptAvailability();
         fetchEmbeddingAvailability();
         fetchStorageEstimate();
+        fetchDriveConnectionStatus();
 
         return () => {
             cancelled = true;
@@ -390,6 +440,123 @@ const SettingsOverlay: React.FC<SettingsOverlayProps> = ({ open, onClose, appNam
             setBackupInfoMessage(null);
         } finally {
             setIsBackupRestoring(false);
+        }
+    };
+
+    const refreshDriveBackups = async () => {
+        setIsDriveListLoading(true);
+        try {
+            setDriveBackups(await listDriveBackups());
+        } catch (error) {
+            console.error("[Settings] Failed to list Drive backups.", error);
+            setDriveError(error instanceof Error ? error.message : String(error));
+        } finally {
+            setIsDriveListLoading(false);
+        }
+    };
+
+    const formatBackupLabel = (entry: DriveBackupEntry) => new Date(entry.createdTime).toLocaleString();
+
+    const handleDriveConnect = async () => {
+        if (isDriveConnecting) return;
+
+        setIsDriveConnecting(true);
+        setDriveError(null);
+        setDriveInfoMessage(null);
+
+        try {
+            const account = await connectGoogleAccount();
+            setDriveAccount(account);
+            await refreshDriveBackups();
+        } catch (error) {
+            console.error("[Settings] Google Drive connect failed.", error);
+            setDriveError(error instanceof Error ? error.message : String(error));
+        } finally {
+            setIsDriveConnecting(false);
+        }
+    };
+
+    const handleDriveDisconnect = async () => {
+        setDriveError(null);
+        setDriveInfoMessage(null);
+        try {
+            await disconnectGoogleAccount();
+            setDriveAccount(null);
+            setDriveBackups([]);
+            setDriveInfoMessage("Disconnected from Google.");
+        } catch (error) {
+            console.error("[Settings] Google Drive disconnect failed.", error);
+            setDriveError(error instanceof Error ? error.message : String(error));
+        }
+    };
+
+    const handleDriveBackup = async () => {
+        if (isDriveBackingUp) return;
+
+        setIsDriveBackingUp(true);
+        setDriveError(null);
+        setDriveInfoMessage(null);
+
+        try {
+            const result = await backupToDrive(version);
+            if (!driveAccount) {
+                setDriveAccount(await getConnectionStatus());
+            }
+            setDriveBackups(prev => [result.entry, ...prev]);
+            setDriveInfoMessage(
+                `Backed up to Google Drive: ${result.rows.topics} topics, ${result.rows.saved_pages} saved pages, ${result.rows.chat_messages} chat messages.`
+            );
+        } catch (error) {
+            console.error("[Settings] Google Drive backup failed.", error);
+            setDriveError(error instanceof Error ? error.message : String(error));
+        } finally {
+            setIsDriveBackingUp(false);
+        }
+    };
+
+    const handleDriveRestore = async (entry: DriveBackupEntry) => {
+        if (driveBusy) return;
+
+        const confirmed = window.confirm(
+            `Restoring "${formatBackupLabel(entry)}" will delete all current topics, saved pages, and chat history, then replace them with this backup.\n\nThis action cannot be undone. Do you want to continue?`
+        );
+        if (!confirmed) return;
+
+        setDriveBusy({ id: entry.id, action: "restore" });
+        setDriveError(null);
+        setDriveInfoMessage(null);
+
+        try {
+            const result = await restoreFromDriveBackup(entry.id);
+            const { topics, saved_pages, chat_messages } = result.restored;
+            setDriveInfoMessage(
+                `Restored "${formatBackupLabel(entry)}": ${topics} topics, ${saved_pages} saved pages, ${chat_messages} chat messages.`
+            );
+        } catch (error) {
+            console.error("[Settings] Google Drive restore failed.", error);
+            setDriveError(error instanceof Error ? error.message : String(error));
+        } finally {
+            setDriveBusy(null);
+        }
+    };
+
+    const handleDriveDelete = async (entry: DriveBackupEntry) => {
+        if (driveBusy) return;
+
+        const confirmed = window.confirm(`Delete backup "${formatBackupLabel(entry)}" from Google Drive? This cannot be undone.`);
+        if (!confirmed) return;
+
+        setDriveBusy({ id: entry.id, action: "delete" });
+        setDriveError(null);
+
+        try {
+            await deleteDriveBackup(entry.id);
+            setDriveBackups(prev => prev.filter(b => b.id !== entry.id));
+        } catch (error) {
+            console.error("[Settings] Google Drive delete failed.", error);
+            setDriveError(error instanceof Error ? error.message : String(error));
+        } finally {
+            setDriveBusy(null);
         }
     };
 
@@ -666,6 +833,109 @@ const SettingsOverlay: React.FC<SettingsOverlayProps> = ({ open, onClose, appNam
 
                         {backupInfoMessage && !backupRestoreError && (
                             <p className="setting-success" role="status">{backupInfoMessage}</p>
+                        )}
+                    </div>
+
+                    <div className="setting-card">
+                        <div className="setting-card-header">
+                            <span className="setting-card-label">Cloud sync (Google Drive)</span>
+                            <span className={`setting-status setting-status--${driveAccount ? "success" : "neutral"}`}>
+                                {isDriveCheckingConnection ? "Checking…" : driveAccount ? "Connected" : "Not connected"}
+                            </span>
+                        </div>
+                        <p className="setting-card-description">
+                            {driveAccount
+                                ? `Signed in as ${driveAccount.email}. Backups are stored in a private, app-only folder in this account's Drive — not visible in your regular Drive files.`
+                                : "Sign in with Google to back up to (and restore from) your own Google Drive, so you can pick up your collection on another browser."}
+                        </p>
+
+                        <div className="setting-actions">
+                            {driveAccount ? (
+                                <button
+                                    type="button"
+                                    className="setting-action setting-action--ghost"
+                                    onClick={handleDriveDisconnect}
+                                    disabled={isDriveBackingUp || !!driveBusy}
+                                >
+                                    Disconnect
+                                </button>
+                            ) : (
+                                <button
+                                    type="button"
+                                    className="setting-action"
+                                    onClick={handleDriveConnect}
+                                    disabled={isDriveConnecting || isDriveCheckingConnection}
+                                >
+                                    {isDriveConnecting ? "Connecting…" : "Connect Google account"}
+                                </button>
+                            )}
+                            <button
+                                type="button"
+                                className="setting-action"
+                                onClick={handleDriveBackup}
+                                disabled={isDriveBackingUp || !!driveBusy}
+                            >
+                                {isDriveBackingUp ? "Backing up…" : "Back up to Drive"}
+                            </button>
+                        </div>
+
+                        <p className="setting-hint">
+                            Each backup is saved as its own snapshot — pick which one to bring back below. Restoring
+                            replaces all current topics, saved pages, and chat history. The search index isn't
+                            included — rebuild it on each device from the card above.
+                        </p>
+
+                        {driveError && (
+                            <p className="setting-error" role="alert">{driveError}</p>
+                        )}
+
+                        {driveInfoMessage && !driveError && (
+                            <p className="setting-success" role="status">{driveInfoMessage}</p>
+                        )}
+
+                        {driveAccount && (
+                            <div className="drive-backup-list">
+                                {isDriveListLoading ? (
+                                    <p className="setting-hint">Loading backups…</p>
+                                ) : driveBackups.length === 0 ? (
+                                    <p className="setting-hint">No backups yet — click "Back up to Drive" to create one.</p>
+                                ) : (
+                                    driveBackups.map(entry => {
+                                        const isRestoringThis = driveBusy?.id === entry.id && driveBusy.action === "restore";
+                                        const isDeletingThis = driveBusy?.id === entry.id && driveBusy.action === "delete";
+                                        return (
+                                            <div className="drive-backup-item" key={entry.id}>
+                                                <div className="drive-backup-meta">
+                                                    <span className="drive-backup-date">{formatBackupLabel(entry)}</span>
+                                                    {entry.size != null && (
+                                                        <span className="drive-backup-size">{formatBytes(entry.size)}</span>
+                                                    )}
+                                                </div>
+                                                <div className="drive-backup-actions">
+                                                    <button
+                                                        type="button"
+                                                        className="setting-action setting-action--ghost"
+                                                        onClick={() => handleDriveRestore(entry)}
+                                                        disabled={!!driveBusy || isDriveBackingUp}
+                                                    >
+                                                        {isRestoringThis ? "Restoring…" : "Restore"}
+                                                    </button>
+                                                    <button
+                                                        type="button"
+                                                        className="drive-backup-delete"
+                                                        title="Delete this backup"
+                                                        aria-label="Delete this backup"
+                                                        onClick={() => handleDriveDelete(entry)}
+                                                        disabled={!!driveBusy || isDriveBackingUp}
+                                                    >
+                                                        {isDeletingThis ? "…" : <Trash2 size={14}/>}
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        );
+                                    })
+                                )}
+                            </div>
                         )}
                     </div>
                 </div>

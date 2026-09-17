@@ -44,6 +44,7 @@ const App: React.FC = () => {
     const [summaryModalOpen, setSummaryModalOpen] = useState(false);
     const [summaryModalTitle, setSummaryModalTitle] = useState("");
     const [summaryModalContent, setSummaryModalContent] = useState("");
+    const [summaryModalUrl, setSummaryModalUrl] = useState("");
 
     const openConfirm = (
         title: string,
@@ -333,17 +334,20 @@ const App: React.FC = () => {
         );
     };
 
-    const handlePageCardClick = (page: SavedPage) => {
+    const openInNewTab = (url: string) => {
         if (typeof chrome !== 'undefined' && chrome.tabs) {
-            chrome.tabs.create({ url: page.url }).catch(error => console.error("Error creating tab:", error));
+            chrome.tabs.create({ url }).catch(error => console.error("Error creating tab:", error));
         } else {
-            window.open(page.url, '_blank');
+            window.open(url, '_blank');
         }
     };
+
+    const handlePageCardClick = (page: SavedPage) => openInNewTab(page.url);
 
     const handleViewSummary = async (page: SavedPage) => {
         setSummaryModalTitle(page.title);
         setSummaryModalContent('Loading summary...');
+        setSummaryModalUrl(page.url);
         setSummaryModalOpen(true);
 
         try {
@@ -718,9 +722,9 @@ const App: React.FC = () => {
                                                 <SavedPageCard
                                                     key={page.id}
                                                     page={page}
-                                                    onClick={() => handlePageCardClick(page)}
+                                                    onClick={() => handleViewSummary(page)}
                                                     onDelete={() => handleDeleteSavedPage(page.id, page.title)}
-                                                    onViewSummary={() => handleViewSummary(page)}
+                                                    onOpenPage={() => handlePageCardClick(page)}
                                                 />
                                             ))
                                     )}
@@ -788,6 +792,7 @@ const App: React.FC = () => {
                 open={summaryModalOpen}
                 title={summaryModalTitle}
                 content={summaryModalContent}
+                onOpenPage={summaryModalUrl ? () => openInNewTab(summaryModalUrl) : undefined}
                 onClose={() => setSummaryModalOpen(false)}
             />
 

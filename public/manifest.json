@@ -10,11 +10,16 @@
     "128": "images/icon128.png"
   },
 
-  "permissions": ["sidePanel", "tabs", "scripting", "offscreen", "unlimitedStorage"],
+  "permissions": ["sidePanel", "tabs", "scripting", "offscreen", "unlimitedStorage", "identity", "identity.email"],
   "host_permissions": ["<all_urls>"],
 
   "content_security_policy": {
     "extension_pages": "script-src 'self' 'wasm-unsafe-eval'; object-src 'self';"
+  },
+
+  "oauth2": {
+    "client_id": "REPLACE_WITH_YOUR_OAUTH_CLIENT_ID.apps.googleusercontent.com",
+    "scopes": ["https://www.googleapis.com/auth/drive.appdata"]
   },
   "action": {
     "default_title": "CollectMind"
