@@ -12,6 +12,9 @@ dist
 dist-ssr
 *.local
 
+# Extension signing keys — never commit; see keys/README.md
+*.pem
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json
