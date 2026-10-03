@@ -159,35 +159,51 @@
         </div>
         <div class="screenshot-grid">
             <figure class="screenshot-card">
-                <img src="images/1.png" alt="CollectMind start page" loading="lazy">
+                <button class="screenshot-trigger" type="button" aria-label="View CollectMind start page screenshot" aria-haspopup="dialog">
+                    <img src="images/1.png" alt="CollectMind start page" loading="lazy">
+                </button>
                 <figcaption>Start page</figcaption>
             </figure>
             <figure class="screenshot-card">
-                <img src="images/3.png" alt="Topic list" loading="lazy">
+                <button class="screenshot-trigger" type="button" aria-label="View topic list screenshot" aria-haspopup="dialog">
+                    <img src="images/3.png" alt="Topic list" loading="lazy">
+                </button>
                 <figcaption>Topic list</figcaption>
             </figure>
             <figure class="screenshot-card">
-                <img src="images/4.png" alt="Saved pages list" loading="lazy">
+                <button class="screenshot-trigger" type="button" aria-label="View saved pages list screenshot" aria-haspopup="dialog">
+                    <img src="images/4.png" alt="Saved pages list" loading="lazy">
+                </button>
                 <figcaption>Saved pages list</figcaption>
             </figure>
             <figure class="screenshot-card">
-                <img src="images/6.png" alt="Summary details" loading="lazy">
+                <button class="screenshot-trigger" type="button" aria-label="View summary details screenshot" aria-haspopup="dialog">
+                    <img src="images/6.png" alt="Summary details" loading="lazy">
+                </button>
                 <figcaption>Summary details</figcaption>
             </figure>
             <figure class="screenshot-card">
-                <img src="images/7.png" alt="AI chat based on topics" loading="lazy">
+                <button class="screenshot-trigger" type="button" aria-label="View topic AI chat screenshot" aria-haspopup="dialog">
+                    <img src="images/7.png" alt="AI chat based on topics" loading="lazy">
+                </button>
                 <figcaption>AI chat based on topics</figcaption>
             </figure>
             <figure class="screenshot-card">
-                <img src="images/11.png" alt="Ask anything in your collection" loading="lazy">
+                <button class="screenshot-trigger" type="button" aria-label="View collection chat screenshot" aria-haspopup="dialog">
+                    <img src="images/11.png" alt="Ask anything in your collection" loading="lazy">
+                </button>
                 <figcaption>Ask your entire collection</figcaption>
             </figure>
             <figure class="screenshot-card">
-                <img src="images/9.png" alt="Settings, local models" loading="lazy">
+                <button class="screenshot-trigger" type="button" aria-label="View local model settings screenshot" aria-haspopup="dialog">
+                    <img src="images/9.png" alt="Settings, local models" loading="lazy">
+                </button>
                 <figcaption>Settings — local models</figcaption>
             </figure>
             <figure class="screenshot-card">
-                <img src="images/10.png" alt="Settings, backup and cloud" loading="lazy">
+                <button class="screenshot-trigger" type="button" aria-label="View backup and cloud settings screenshot" aria-haspopup="dialog">
+                    <img src="images/10.png" alt="Settings, backup and cloud" loading="lazy">
+                </button>
                 <figcaption>Settings — backup &amp; cloud</figcaption>
             </figure>
         </div>
@@ -230,6 +246,16 @@
         </ul>
     </div>
 </footer>
+
+<dialog class="screenshot-lightbox" aria-label="Screenshot preview">
+    <button class="lightbox-close" type="button" aria-label="Close screenshot preview">&times;</button>
+    <figure class="lightbox-content">
+        <img class="lightbox-image" alt="">
+        <figcaption class="lightbox-caption"></figcaption>
+    </figure>
+</dialog>
+
+<script type="module" src="script.js"></script>
 
 </body>
 </html>
