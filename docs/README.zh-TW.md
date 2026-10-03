@@ -16,6 +16,10 @@
 
 CollectMind 是一款由 AI 驅動的書籤收藏工具,協助你打造屬於自己的知識庫。
 
+<p align="center">
+  <a href="https://chromewebstore.google.com/detail/collectmind/cgmlmlmdnneajdpaegjkjoamomlkomhg"><strong>從 Chrome 線上應用程式商店安裝 CollectMind →</strong></a>
+</p>
+
 **所有功能完全在本機裝置上執行。** 摘要生成、檢索與聊天全部由 Chrome 內建的 Gemini Nano,以及運行在瀏覽器內的本機 embedding 模型完成——沒有後端伺服器、不需要 API key、也不需要註冊帳號。你的書籤、網頁內容與聊天紀錄都不會離開你的裝置。唯一刻意保留的例外是備份功能:如果你選擇備份到 Google 雲端硬碟,資料會直接從瀏覽器傳輸到**你自己的**雲端硬碟空間——CollectMind 全程不會經手、也看不到這些資料。
 
 ## 1. 主要功能
@@ -39,12 +43,16 @@ CollectMind 完全仰賴 Chrome 內建 AI(Gemini Nano)與一個輕量的本機 e
 
 可以在**設定**中檢視索引狀態,並重新建立搜尋索引。
 
-## 3. 建置與執行
+## 3. 安裝 CollectMind
 > ⚠️ AI 相關功能仰賴 Chrome 內建 AI 能力,因此最低需要 **Chrome 138** 版本;裝置端模型對硬體也有實際需求:**至少 22GB 的可用磁碟空間**,並需搭配**顯示記憶體超過 4GB 的 GPU**,或是 **16GB 以上記憶體 + 4 核以上 CPU** 兩者擇一。若設定頁面中某個狀態卡片顯示「Unavailable」,可開啟 `chrome://on-device-internals` 查看確切原因(最常見的是磁碟空間不足)。
 
-1. 複製(clone)此儲存庫
-2. ```npm install && npm run build```
-3. 在 Chrome 中以「載入未封裝項目」的方式載入 ```/dist``` 目錄。
+直接從 [Chrome 線上應用程式商店](https://chromewebstore.google.com/detail/collectmind/cgmlmlmdnneajdpaegjkjoamomlkomhg)安裝 CollectMind,然後點擊擴充功能圖示即可開啟。
+
+### 從原始碼建置
+
+1. 複製(clone)此儲存庫。
+2. 執行 `npm install && npm run build`。
+3. 在 Chrome 中以「載入未封裝項目」的方式載入 `/dist` 目錄。
 4. 點擊擴充功能圖示以開啟 CollectMind。
 
 第一次產生摘要或開始聊天時,Chrome 會提示下載其裝置端模型(數 GB 大小),embedding 模型(約 120MB)則會在背景下載——兩者下載完成後都會被快取,之後便不再需要網路連線。

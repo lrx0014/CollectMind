@@ -16,6 +16,10 @@
 
 CollectMind es una colección de marcadores potenciada por IA que te ayuda a construir tu propia base de conocimiento.
 
+<p align="center">
+  <a href="https://chromewebstore.google.com/detail/collectmind/cgmlmlmdnneajdpaegjkjoamomlkomhg"><strong>Instala CollectMind desde Chrome Web Store →</strong></a>
+</p>
+
 **Todo se ejecuta completamente en tu dispositivo.** El resumen, la recuperación de información y el chat funcionan gracias a Gemini Nano, integrado en Chrome, y a un modelo de embeddings local que se ejecuta en tu navegador — no hay servidor backend, ni clave de API, ni se requiere cuenta alguna. Tus marcadores, el contenido de las páginas y el historial de chat nunca salen de tu equipo. La única excepción deliberada es la copia de seguridad: si eliges hacer una copia de seguridad en Google Drive, los datos van directamente desde tu navegador a *tu propio* Drive — CollectMind no interviene en ningún momento ni llega a verlos.
 
 ## 1. Funciones principales
@@ -39,12 +43,16 @@ CollectMind funciona por completo con la IA integrada de Chrome (Gemini Nano) y 
 
 Puedes comprobar el estado de la indexación y reconstruir el índice de búsqueda desde **Configuración**.
 
-## 3. Cómo compilar y ejecutar
+## 3. Instalar CollectMind
 > ⚠️ Las funciones de IA dependen de las capacidades de IA integradas en Chrome, por lo que la versión mínima requerida es **Chrome 138**, y el modelo en el dispositivo tiene requisitos de hardware reales: **22 GB o más de espacio libre en disco**, además de una GPU con **más de 4 GB de VRAM** o **16 GB o más de RAM y 4 o más núcleos de CPU**. Si una tarjeta de estado en Configuración muestra "Unavailable", abre `chrome://on-device-internals` para ver el motivo exacto (lo más habitual es falta de espacio en disco).
 
-1. Clona este repositorio
-2. ```npm install && npm run build```
-3. Carga el directorio ```/dist``` en Chrome como una extensión sin empaquetar.
+Instala CollectMind directamente desde [Chrome Web Store](https://chromewebstore.google.com/detail/collectmind/cgmlmlmdnneajdpaegjkjoamomlkomhg) y haz clic en el icono de la extensión para abrirlo.
+
+### Compilar desde el código fuente
+
+1. Clona este repositorio.
+2. Ejecuta `npm install && npm run build`.
+3. Carga el directorio `/dist` en Chrome como una extensión sin empaquetar.
 4. Haz clic en el icono de la extensión para abrir CollectMind.
 
 La primera vez que resumas una página o inicies un chat, Chrome te pedirá que descargues su modelo integrado (unos pocos GB), y el modelo de embeddings (~120 MB) se descargará en segundo plano — ambos quedan en caché después y ya no requieren acceso a la red.
