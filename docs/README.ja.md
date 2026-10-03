@@ -16,6 +16,10 @@
 
 CollectMind は、自分だけのナレッジベースを構築できる AI 搭載のブックマークコレクションです。
 
+<p align="center">
+  <a href="https://chromewebstore.google.com/detail/collectmind/cgmlmlmdnneajdpaegjkjoamomlkomhg"><strong>Chrome ウェブストアから CollectMind をインストール →</strong></a>
+</p>
+
 **すべての処理は完全にデバイス上で完結します。** 要約・検索・チャットはすべて、Chrome に内蔵された Gemini Nano とブラウザ内で動作するローカルの埋め込みモデルによって行われます——バックエンドサーバーも、API キーも、アカウント登録も一切不要です。ブックマークやページの内容、チャット履歴が端末の外に出ることはありません。唯一意図的な例外はバックアップ機能です。Google ドライブへのバックアップを選択した場合、データはブラウザから直接**あなた自身の**ドライブへ送られます——CollectMind がその間に介在したり、データを見たりすることは一切ありません。
 
 ## 1. 主な機能
@@ -39,12 +43,16 @@ CollectMind は、Chrome 内蔵の AI(Gemini Nano)と小型のローカル埋め
 
 インデックスの状態確認や検索インデックスの再構築は、**設定**画面から行えます。
 
-## 3. ビルドと実行方法
+## 3. CollectMind のインストール
 > ⚠️ AI 機能は Chrome 内蔵の AI 機能に依存しているため、**Chrome 138** 以上が必要です。また、端末上で動作するモデルには実際のハードウェア要件があります:**空き容量 22GB 以上**、加えて **VRAM 4GB 超の GPU**、または **16GB 以上の RAM と 4 コア以上の CPU** のいずれかが必要です。設定画面のステータスカードに「Unavailable」と表示された場合は、`chrome://on-device-internals` を開いて具体的な原因(多くはディスク容量不足)を確認してください。
 
-1. このリポジトリをクローンする
-2. ```npm install && npm run build```
-3. ```/dist``` ディレクトリを Chrome にパッケージ化されていない拡張機能として読み込む。
+[Chrome ウェブストア](https://chromewebstore.google.com/detail/collectmind/cgmlmlmdnneajdpaegjkjoamomlkomhg)から CollectMind を直接インストールし、拡張機能のアイコンをクリックして開いてください。
+
+### ソースからビルド
+
+1. このリポジトリをクローンする。
+2. `npm install && npm run build` を実行する。
+3. `/dist` ディレクトリを Chrome にパッケージ化されていない拡張機能として読み込む。
 4. 拡張機能のアイコンをクリックして CollectMind を開く。
 
 初めてページを要約したりチャットしたりする際、Chrome から端末上のモデル(数 GB)のダウンロードを促されます。また埋め込みモデル(約 120MB)はバックグラウンドでダウンロードされます——どちらもその後はキャッシュされ、再度のネットワークアクセスは不要になります。

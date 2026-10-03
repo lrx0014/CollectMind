@@ -16,6 +16,10 @@
 
 CollectMind is an AI-powered Bookmark Collection which helps you build your own knowledge base.
 
+<p align="center">
+  <a href="https://chromewebstore.google.com/detail/collectmind/cgmlmlmdnneajdpaegjkjoamomlkomhg"><strong>Install CollectMind from the Chrome Web Store →</strong></a>
+</p>
+
 **Everything runs entirely on-device.** Summarization, retrieval, and chat are all powered by Chrome's built-in Gemini Nano and a local embedding model running in your browser — there's no backend server, no API key, and no account required. Your bookmarks, page content, and chat history never leave your machine. The one deliberate exception is backup: if you choose to back up to Google Drive, that data goes straight from your browser to *your own* Drive storage — CollectMind has no server in between and never sees it.
 
 ## 1. Main Features
@@ -39,12 +43,16 @@ CollectMind runs entirely on Chrome's built-in AI (Gemini Nano) plus a small loc
 
 Check indexing status and rebuild the search index from **Settings**.
 
-## 3. How to build & run
+## 3. Install CollectMind
 > ⚠️ The AI features rely on Chrome built-in AI capabilities, so the minimum required version is **Chrome 138**, and the on-device model has real hardware requirements: **≥22GB free disk space**, plus either a GPU with **>4GB VRAM** or **16GB+ RAM and 4+ CPU cores**. If a status card in Settings shows "Unavailable", open `chrome://on-device-internals` for the exact reason (most commonly disk space).
 
-1. clone this repo
-2. ```npm install && npm run build```
-3. Load the ```/dist``` directory in Chrome as an unpacked extension.
+Install CollectMind directly from the [Chrome Web Store](https://chromewebstore.google.com/detail/collectmind/cgmlmlmdnneajdpaegjkjoamomlkomhg), then click the extension's icon to open it.
+
+### Build from source
+
+1. Clone this repository.
+2. Run `npm install && npm run build`.
+3. Load the `/dist` directory in Chrome as an unpacked extension.
 4. Click the extension's icon to open CollectMind.
 
 The first time you summarize a page or chat, Chrome will prompt to download its on-device model (a few GB), and the embedding model (~120MB) will download in the background — both are cached afterward and don't require network access again.
@@ -105,4 +113,3 @@ The first time you summarize a page or chat, Chrome will prompt to download its 
   <figcaption> 11. Settings (Backup and Cloud) </figcaption>
   <img src="./docs/images/10.png" width="200">
 </figure>
-
