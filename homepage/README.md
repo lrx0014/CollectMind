@@ -1,29 +1,55 @@
 # CollectMind homepage
 
-A static, no-build-step product page for CollectMind — plain HTML/CSS, no framework, nothing to compile. Deploy it as-is.
+The CollectMind product site is a small, framework-free Vite project deployed to Cloudflare with Wrangler. Vite builds both HTML pages and their shared CSS/images into `dist/`.
 
-```
+```text
 homepage/
-  index.html     — the product page
-  privacy.html   — privacy policy sub-page (same content as ../PRIVACY.md, styled)
-  styles.css     — shared styles for both pages
-  images/        — logo + screenshots (copied from ../docs/images/)
+  index.html        — product page
+  privacy.html      — styled privacy policy
+  styles.css        — shared styles
+  images/           — logo and screenshots
+  vite.config.js    — multi-page build configuration
+  wrangler.jsonc    — Cloudflare static-assets configuration
+  dist/             — generated build output (not committed)
 ```
 
-## Deploying with GitHub Pages (recommended, free)
+## Local development
 
-1. Push this folder to GitHub.
-2. Repo **Settings → Pages**.
-3. Under "Build and deployment", set **Source: Deploy from a branch**, pick your branch (e.g. `master`), and set the folder to **`/homepage`** (GitHub Pages lets you serve from a subfolder without needing a separate branch or `gh-pages` setup).
-4. Save. GitHub will publish it at `https://<your-username>.github.io/CollectMind/` within a minute or two.
+Requires Node.js 22.12 or newer. The repository pins Node.js 22.16 for Cloudflare builds through `.node-version`.
 
-Once live, that URL (and `.../privacy.html` for the policy page) is what you plug into:
-- The Chrome Web Store listing's **Homepage URL** / **Support URL** fields.
-- The Chrome Web Store's required **Privacy Policy URL** (use the `privacy.html` page instead of linking the raw `PRIVACY.md` — same content, nicer to read).
-- Google Cloud Console's OAuth consent screen **Application home page** / **Privacy Policy link** fields.
+```bash
+npm install
+npm run dev
+```
 
-## Keeping it in sync
+## Build and preview
 
-- **Screenshots**: if you update `docs/images/*.png` (e.g. after a UI change), copy the same files into `homepage/images/` so the product page and the README stay consistent.
-- **Privacy policy**: `privacy.html` is a manually-kept HTML copy of `../PRIVACY.md`'s content — if you edit one, update the other. There's no build step wiring them together on purpose (keeps this folder dependency-free), so this is a manual sync.
-- **"Get CollectMind" button** in `index.html`'s hero section currently links to the README's build instructions (there's no published listing yet). Once the extension is live on the Chrome Web Store, replace that `href` with the real store listing URL.
+```bash
+npm run build
+npm run preview
+```
+
+The production build includes both `/index.html` and `/privacy.html`.
+
+## Cloudflare automatic deployment
+
+Configure the Cloudflare Git deployment with:
+
+- Root directory: `homepage`
+- Build command: `npm run build`
+- Deploy command: `npx wrangler deploy`
+
+Wrangler reads `wrangler.jsonc` and deploys the generated `dist/` directory as static assets. If the existing Cloudflare project uses a different Worker name, update the `name` in `wrangler.jsonc` to match it.
+
+For a manual deployment from this directory, run:
+
+```bash
+npm run deploy
+```
+
+The deployed homepage and `/privacy.html` URLs can be used for the Chrome Web Store listing and Google OAuth consent screen.
+
+## Keeping content in sync
+
+- **Screenshots**: when `docs/images/*.png` changes, copy the corresponding files into `homepage/images/`.
+- **Privacy policy**: `privacy.html` is a manually maintained HTML copy of `../PRIVACY.md`; update both when the policy changes.
